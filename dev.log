@@ -1,0 +1,83 @@
+
+> macro-dashboard@0.1.0 dev
+> next dev
+
+  ▲ Next.js 14.2.5
+  - Local:        http://localhost:3000
+
+ ✓ Starting...
+ ✓ Ready in 1675ms
+ ✓ Compiled /api/calendar in 493ms (220 modules)
+[parseFFHtml] rows=71 withActuals=29 dates=2026-04-19,2026-04-20,2026-04-21,2026-04-22,2026-04-23
+[parseFFHtml] sample actuals: [
+  '2026-04-19 GBP Rightmove HPI m/m=0.8%',
+  '2026-04-19 JPY Tertiary Industry Ac=-0.4%',
+  '2026-04-19 EUR German PPI m/m=2.5%'
+]
+[parseFFHtml] rows=71 withActuals=29 dates=2026-04-19,2026-04-20,2026-04-21,2026-04-22,2026-04-23
+[parseFFHtml] sample actuals: [
+  '2026-04-19 GBP Rightmove HPI m/m=0.8%',
+  '2026-04-19 JPY Tertiary Industry Ac=-0.4%',
+  '2026-04-19 EUR German PPI m/m=2.5%'
+]
+[parseFFHtml] rows=71 withActuals=29 dates=2026-04-19,2026-04-20,2026-04-21,2026-04-22,2026-04-23
+[parseFFHtml] sample actuals: [
+  '2026-04-19 GBP Rightmove HPI m/m=0.8%',
+  '2026-04-19 JPY Tertiary Industry Ac=-0.4%',
+  '2026-04-19 EUR German PPI m/m=2.5%'
+]
+[parseFFHtml] rows=71 withActuals=29 dates=2026-04-19,2026-04-20,2026-04-21,2026-04-22,2026-04-23
+[parseFFHtml] sample actuals: [
+  '2026-04-19 GBP Rightmove HPI m/m=0.8%',
+  '2026-04-19 JPY Tertiary Industry Ac=-0.4%',
+  '2026-04-19 EUR German PPI m/m=2.5%'
+]
+[FF] events=71 released=29 base=0 extraHtml=284 actualsMap=29
+[ForexFactory] Partial failures: [
+  'NFS thisweek: NFS thisweek: HTTP 429',
+  'NFS nextweek: NFS nextweek: HTTP 404'
+]
+[calendar] Partial failures: [
+  'NFS thisweek: NFS thisweek: HTTP 429',
+  'NFS nextweek: NFS nextweek: HTTP 404'
+]
+ GET /api/calendar 200 in 5038ms
+ ✓ Compiled in 28ms
+ ✓ Compiled /api/calendar in 125ms (220 modules)
+[parseFFHtml] rows=71 withActuals=29 dates=2026-04-19,2026-04-20,2026-04-21,2026-04-22,2026-04-23
+[parseFFHtml] sample actuals: [
+  '2026-04-19 GBP Rightmove HPI m/m=0.8%',
+  '2026-04-19 JPY Tertiary Industry Ac=-0.4%',
+  '2026-04-19 EUR German PPI m/m=2.5%'
+]
+[parseFFHtml] rows=71 withActuals=29 dates=2026-04-19,2026-04-20,2026-04-21,2026-04-22,2026-04-23
+[parseFFHtml] sample actuals: [
+  '2026-04-19 GBP Rightmove HPI m/m=0.8%',
+  '2026-04-19 JPY Tertiary Industry Ac=-0.4%',
+  '2026-04-19 EUR German PPI m/m=2.5%'
+]
+[parseFFHtml] rows=71 withActuals=29 dates=2026-04-19,2026-04-20,2026-04-21,2026-04-22,2026-04-23
+[parseFFHtml] sample actuals: [
+  '2026-04-19 GBP Rightmove HPI m/m=0.8%',
+  '2026-04-19 JPY Tertiary Industry Ac=-0.4%',
+  '2026-04-19 EUR German PPI m/m=2.5%'
+]
+[parseFFHtml] rows=71 withActuals=29 dates=2026-04-19,2026-04-20,2026-04-21,2026-04-22,2026-04-23
+[parseFFHtml] sample actuals: [
+  '2026-04-19 GBP Rightmove HPI m/m=0.8%',
+  '2026-04-19 JPY Tertiary Industry Ac=-0.4%',
+  '2026-04-19 EUR German PPI m/m=2.5%'
+]
+[FF] events=71 released=29 base=0 extraHtml=284 actualsMap=29
+[FF] April 22 actuals in map (0): []
+[FF] April 22 released events: 0
+[ForexFactory] Partial failures: [
+  'NFS thisweek: NFS thisweek: HTTP 429',
+  'NFS nextweek: NFS nextweek: HTTP 404'
+]
+[calendar] Partial failures: [
+  'NFS thisweek: NFS thisweek: HTTP 429',
+  'NFS nextweek: NFS nextweek: HTTP 404'
+]
+ GET /api/calendar 200 in 2770ms
+ GET /api/calendar 200 in 7ms
