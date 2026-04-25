@@ -150,7 +150,7 @@ function ffWeekParam(weeksFromNow: number): string {
 // Fetch FF HTML using system curl (bypasses Cloudflare TLS fingerprint detection).
 // Returns null if curl is not installed or the request fails.
 async function fetchFFHtmlViaCurl(weekParam: string): Promise<string | null> {
-  const url = `${FF_BASE}/calendar.php?week=${weekParam}`;
+  const url = `${FF_BASE}/calendar?week=${weekParam}`;
   try {
     const { stdout } = await execFileAsync(
       'curl',

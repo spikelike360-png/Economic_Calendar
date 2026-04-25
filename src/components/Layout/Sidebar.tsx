@@ -1,13 +1,15 @@
 'use client';
 
-import { CalendarDays, Activity, NotebookPen, BarChart2 } from 'lucide-react';
+import { CalendarDays, Activity, NotebookPen, BarChart2, Newspaper, TrendingUp } from 'lucide-react';
 import { clsx } from 'clsx';
 
-export type Section = 'calendar' | 'metrics' | 'notes';
+export type Section = 'calendar' | 'metrics' | 'news' | 'cot' | 'notes';
 
 const NAV_ITEMS: { id: Section; icon: React.ElementType; label: string }[] = [
   { id: 'calendar', icon: CalendarDays,  label: 'Calendar'      },
   { id: 'metrics',  icon: Activity,      label: 'Macro Metrics' },
+  { id: 'news',     icon: Newspaper,     label: 'News Feed'     },
+  { id: 'cot',      icon: TrendingUp,    label: 'COT Report'    },
   { id: 'notes',    icon: NotebookPen,   label: 'Notes'         },
 ];
 

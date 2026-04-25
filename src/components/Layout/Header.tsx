@@ -7,12 +7,16 @@ import type { Section } from './Sidebar';
 const SECTION_TITLE: Record<Section, string> = {
   calendar: 'Economic Calendar',
   metrics:  'Macro Metrics',
+  news:     'News Feed',
+  cot:      'Commitment of Traders',
   notes:    'Notes',
 };
 
 const SECTION_SUB: Record<Section, string> = {
   calendar: 'Forex Factory · USD · EUR · GBP · JPY · CAD · AUD',
   metrics:  'Interest rates · Inflation · Unemployment · GDP',
+  news:     'Yahoo Finance · CNBC · MarketWatch · Live RSS',
+  cot:      'CFTC · Currencies & Commodities · Non-Commercial / Commercial / Non-Reportable',
   notes:    'Stored locally · never sent to a server',
 };
 

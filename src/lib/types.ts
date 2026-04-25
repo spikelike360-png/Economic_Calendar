@@ -63,3 +63,36 @@ export interface MetricsResponse {
   source: 'fred' | 'fallback' | 'error';
   error?: string;
 }
+
+export interface COTPosition {
+  long: number;
+  short: number;
+  net: number;
+  changeNet: number;
+}
+
+export interface COTHistoryPoint {
+  date: string;
+  net: number;
+}
+
+export interface COTContract {
+  key: string;
+  label: string;
+  exchange: string;
+  category: 'currency' | 'commodity';
+  reportDate: string;
+  openInterest: number;
+  nonCommercial: COTPosition;
+  commercial: COTPosition;
+  nonReportable: COTPosition;
+  history: COTHistoryPoint[];
+}
+
+export interface COTResponse {
+  contracts: COTContract[];
+  fetchedAt: string;
+  isStale: boolean;
+  source: 'cftc' | 'cache' | 'error';
+  error?: string;
+}

@@ -1,6 +1,7 @@
 'use client';
 
-import { Fragment, useMemo } from 'react';
+import { Fragment, useMemo, useState } from 'react';
+import { ChevronDown, ChevronRight } from 'lucide-react';
 import type { CalendarEvent } from '@/lib/types';
 import ImpactBadge from '@/components/ui/ImpactBadge';
 import CurrencyBadge from '@/components/ui/CurrencyBadge';
@@ -48,6 +49,20 @@ export default function CalendarTable({ events }: Props) {
     return Array.from(map.entries()).sort(([a], [b]) => a.localeCompare(b));
   }, [events]);
 
+  // Past days start collapsed, today + future start open
+  const [collapsed, setCollapsed] = useState<Set<string>>(
+    () => new Set(events.filter((e) => e.date < todayET).map((e) => e.date)),
+  );
+
+  const toggle = (date: string) => {
+    setCollapsed((prev) => {
+      const next = new Set(prev);
+      if (next.has(date)) next.delete(date);
+      else next.add(date);
+      return next;
+    });
+  };
+
   if (events.length === 0) {
     return (
       <div className="flex flex-col items-center justify-center py-20 text-slate-600 gap-3">
@@ -75,18 +90,27 @@ export default function CalendarTable({ events }: Props) {
           {grouped.map(([date, dayEvents]) => {
             const isToday = date === todayET;
             const isPast = date < todayET;
+            const isCollapsed = collapsed.has(date);
 
             return (
               <Fragment key={date}>
-                {/* Date separator row */}
+                {/* Date separator row — clickable */}
                 <tr
                   className={clsx(
-                    'border-t border-slate-800/60',
-                    isToday ? 'bg-violet-500/5' : 'bg-[#080b14]/60',
+                    'border-t border-slate-800/60 cursor-pointer select-none group',
+                    isToday
+                      ? 'bg-violet-500/5 hover:bg-violet-500/10'
+                      : 'bg-[#080b14]/60 hover:bg-slate-800/40',
                   )}
+                  onClick={() => toggle(date)}
                 >
                   <td colSpan={7} className="px-4 py-2">
                     <div className="flex items-center gap-2">
+                      {isCollapsed ? (
+                        <ChevronRight className="w-3.5 h-3.5 text-slate-600 group-hover:text-slate-400 shrink-0 transition-colors" />
+                      ) : (
+                        <ChevronDown className="w-3.5 h-3.5 text-slate-600 group-hover:text-slate-400 shrink-0 transition-colors" />
+                      )}
                       {isToday && (
                         <span className="inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-xs font-semibold bg-violet-500/20 text-violet-300 border border-violet-500/30">
                           <span className="w-1.5 h-1.5 rounded-full bg-violet-400 animate-pulse" />
@@ -108,42 +132,43 @@ export default function CalendarTable({ events }: Props) {
                   </td>
                 </tr>
 
-                {/* Event rows */}
-                {dayEvents.map((ev) => (
-                  <tr
-                    key={ev.id}
-                    className={clsx(
-                      'border-b border-slate-800/40 transition-colors',
-                      isPast && !ev.isReleased
-                        ? 'opacity-40 hover:opacity-60'
-                        : isPast
-                          ? 'opacity-60 hover:opacity-80'
-                          : 'hover:bg-violet-500/5',
-                      isToday && 'bg-violet-500/[0.02]',
-                    )}
-                  >
-                    <td className="px-3 py-2.5 font-mono text-xs text-slate-500 whitespace-nowrap w-20">
-                      {ev.time}
-                    </td>
-                    <td className="px-3 py-2.5 w-20">
-                      <CurrencyBadge currency={ev.currency} />
-                    </td>
-                    <td className="px-3 py-2.5 w-28">
-                      <ImpactBadge impact={ev.impact} />
-                    </td>
-                    <td className="px-3 py-2.5 text-slate-200 text-sm">
-                      <span className={clsx('leading-snug', isPast && 'text-slate-500')}>
-                        {ev.title}
-                      </span>
-                    </td>
-                    <ValueCell
-                      value={ev.actual}
-                      className={ev.isReleased ? 'text-slate-100 font-semibold' : undefined}
-                    />
-                    <ValueCell value={ev.forecast} />
-                    <ValueCell value={ev.previous} />
-                  </tr>
-                ))}
+                {/* Event rows — hidden when collapsed */}
+                {!isCollapsed &&
+                  dayEvents.map((ev) => (
+                    <tr
+                      key={ev.id}
+                      className={clsx(
+                        'border-b border-slate-800/40 transition-colors',
+                        isPast && !ev.isReleased
+                          ? 'opacity-40 hover:opacity-60'
+                          : isPast
+                            ? 'opacity-60 hover:opacity-80'
+                            : 'hover:bg-violet-500/5',
+                        isToday && 'bg-violet-500/[0.02]',
+                      )}
+                    >
+                      <td className="px-3 py-2.5 font-mono text-xs text-slate-500 whitespace-nowrap w-20">
+                        {ev.time}
+                      </td>
+                      <td className="px-3 py-2.5 w-20">
+                        <CurrencyBadge currency={ev.currency} />
+                      </td>
+                      <td className="px-3 py-2.5 w-28">
+                        <ImpactBadge impact={ev.impact} />
+                      </td>
+                      <td className="px-3 py-2.5 text-slate-200 text-sm">
+                        <span className={clsx('leading-snug', isPast && 'text-slate-500')}>
+                          {ev.title}
+                        </span>
+                      </td>
+                      <ValueCell
+                        value={ev.actual}
+                        className={ev.isReleased ? 'text-slate-100 font-semibold' : undefined}
+                      />
+                      <ValueCell value={ev.forecast} />
+                      <ValueCell value={ev.previous} />
+                    </tr>
+                  ))}
               </Fragment>
             );
           })}

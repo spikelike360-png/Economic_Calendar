@@ -30,7 +30,9 @@ export async function GET() {
     };
 
     memCache.set(CACHE_KEY, response, CACHE_TTL);
-    return NextResponse.json(response);
+    return NextResponse.json(response, {
+      headers: { 'Cache-Control': 'public, s-maxage=300, stale-while-revalidate=86400' },
+    });
   } catch (err) {
     console.error('[calendar] Fatal fetch error:', err);
 

@@ -53,6 +53,17 @@ textarea {
   transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
 }
 
+/* COT sparkline draw animation */
+@keyframes cot-draw {
+  from { stroke-dashoffset: 1; }
+  to   { stroke-dashoffset: 0; }
+}
+.cot-line {
+  stroke-dasharray: 1;
+  stroke-dashoffset: 1;
+  animation: cot-draw 1.2s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+}
+
 /* Focus ring */
 button:focus-visible,
 input:focus-visible,

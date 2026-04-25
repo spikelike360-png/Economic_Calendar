@@ -79,19 +79,35 @@ function applyFilters(events: CalendarEvent[], filters: CalendarFilters): Calend
 
 const REFRESH_INTERVAL_MS = 5 * 60 * 1000;
 
+// Module-level cache — survives navigation, stale after 5 min
+let _calCache: CalendarResponse | null = null;
+let _calCachedAt = 0;
+
 export default function CalendarSection() {
-  const [data, setData] = useState<CalendarResponse | null>(null);
-  const [loading, setLoading] = useState(true);
+  const [data, setData]             = useState<CalendarResponse | null>(_calCache);
+  const [loading, setLoading]       = useState(_calCache === null);
   const [refreshing, setRefreshing] = useState(false);
-  const [filters, setFilters] = useState<CalendarFilters>(DEFAULT_FILTERS);
+  const [filters, setFilters]       = useState<CalendarFilters>(DEFAULT_FILTERS);
   const timerRef = useRef<NodeJS.Timeout | null>(null);
 
   const fetchData = useCallback(async (silent = false) => {
-    if (!silent) setLoading(true);
-    else setRefreshing(true);
+    const stale = Date.now() - _calCachedAt > REFRESH_INTERVAL_MS;
+
+    // Use module cache if fresh and not a timer-triggered silent refresh
+    if (!silent && _calCache && !stale) {
+      setData(_calCache);
+      setLoading(false);
+      return;
+    }
+
+    if (silent) setRefreshing(true);
+    else if (!_calCache) setLoading(true);
+
     try {
-      const res = await fetch('/api/calendar', { cache: 'no-store' });
+      const res = await fetch('/api/calendar');
       const json: CalendarResponse = await res.json();
+      _calCache = json;
+      _calCachedAt = Date.now();
       setData(json);
     } catch {
       setData((prev) =>

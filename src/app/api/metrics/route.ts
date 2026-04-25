@@ -1,6 +1,5 @@
 import { NextResponse } from 'next/server';
 import { fetchFredMetrics } from '@/lib/scraper/fredApi';
-import { fetchTEMetrics } from '@/lib/scraper/teScraper';
 import { macroMetrics as FALLBACK } from '@/lib/macroData';
 import { memCache } from '@/lib/scraper/cache';
 import type { MetricsResponse } from '@/lib/types';
@@ -19,24 +18,19 @@ export async function GET() {
   const apiKey = process.env.FRED_API_KEY;
 
   try {
-    // USD from FRED, EUR/GBP/JPY/CAD/AUD from Trading Economics (no key needed)
-    const [usdMetrics, nonUsdMetrics] = await Promise.all([
-      apiKey
-        ? fetchFredMetrics(apiKey, ['USD'])
-        : Promise.resolve([FALLBACK.find((m) => m.id === 'USD')!]),
-      fetchTEMetrics(),
-    ]);
+    const metrics = apiKey ? await fetchFredMetrics(apiKey) : FALLBACK;
 
-    const metrics = [...usdMetrics, ...nonUsdMetrics];
     const response: MetricsResponse = {
       metrics,
       fetchedAt: new Date().toISOString(),
       isStale: false,
       source: apiKey ? 'fred' : 'fallback',
-      ...(!apiKey && { error: 'FRED_API_KEY not set — USD using static data' }),
+      ...(!apiKey && { error: 'FRED_API_KEY not set — showing static data' }),
     };
     memCache.set(CACHE_KEY, response, CACHE_TTL);
-    return NextResponse.json(response);
+    return NextResponse.json(response, {
+      headers: { 'Cache-Control': 'public, s-maxage=21600, stale-while-revalidate=86400' },
+    });
   } catch (err) {
     console.error('[metrics] fetch error:', err);
 
