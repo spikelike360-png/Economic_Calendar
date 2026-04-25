@@ -169,7 +169,8 @@ function Sparkline({ history, net, height = 72 }: { history: COTHistoryPoint[]; 
 const fmt = (n: number) => new Intl.NumberFormat('en-US', { maximumFractionDigits: 0 }).format(n);
 const fmtDelta = (n: number) => (n >= 0 ? '+' : '') + fmt(n);
 
-function ChangeBadge({ value }: { value: number }) {
+function ChangeBadge({ value }: { value: number | undefined }) {
+  if (value === undefined || isNaN(value)) return <span className="text-xs text-slate-700 font-mono">—</span>;
   const pos = value >= 0;
   return (
     <span className={clsx(
@@ -404,7 +405,7 @@ function AssetList({
 // Module-level: survives navigation within the same browser tab (instant)
 // localStorage: survives page refresh / browser restart (stale after 7 days)
 
-const LS_KEY = 'cot_v2';
+const LS_KEY = 'cot_v3';
 const LS_MAX_AGE = 7 * 24 * 60 * 60 * 1000;
 
 function lsRead(): COTResponse | null {
