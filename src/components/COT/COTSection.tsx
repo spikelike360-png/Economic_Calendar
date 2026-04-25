@@ -353,7 +353,7 @@ function AssetList({
 // Module-level: survives navigation within the same browser tab (instant)
 // localStorage: survives page refresh / browser restart (stale after 7 days)
 
-const LS_KEY = 'cot_v1';
+const LS_KEY = 'cot_v2';
 const LS_MAX_AGE = 7 * 24 * 60 * 60 * 1000;
 
 function lsRead(): COTResponse | null {
