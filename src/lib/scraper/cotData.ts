@@ -7,11 +7,11 @@ const CFTC_BASE = 'https://www.cftc.gov/files/dea/history';
 
 export const CONTRACT_DEFS = [
   { key: 'eur', match: 'EURO FX',               label: 'EUR/USD',   exchange: 'CME',   category: 'currency'  },
-  { key: 'gbp', match: 'BRITISH POUND STERLING', label: 'GBP/USD',   exchange: 'CME',   category: 'currency'  },
+  { key: 'gbp', match: 'BRITISH POUND',          label: 'GBP/USD',   exchange: 'CME',   category: 'currency'  },
   { key: 'jpy', match: 'JAPANESE YEN',           label: 'JPY',       exchange: 'CME',   category: 'currency'  },
   { key: 'cad', match: 'CANADIAN DOLLAR',        label: 'CAD',       exchange: 'CME',   category: 'currency'  },
   { key: 'aud', match: 'AUSTRALIAN DOLLAR',      label: 'AUD/USD',   exchange: 'CME',   category: 'currency'  },
-  { key: 'dxy', match: 'U.S. DOLLAR INDEX',      label: 'USD Index', exchange: 'ICE',   category: 'currency'  },
+  { key: 'dxy', match: 'USD INDEX',               label: 'USD Index', exchange: 'ICE',   category: 'currency'  },
   { key: 'gold',match: 'GOLD - COMMODITY',       label: 'Gold',      exchange: 'COMEX', category: 'commodity' },
   { key: 'wti', match: 'CRUDE OIL, LIGHT SWEET', label: 'WTI Crude', exchange: 'NYMEX', category: 'commodity' },
   { key: 'spx', match: 'E-MINI S&P 500',         label: 'S&P 500',   exchange: 'CME',   category: 'commodity' },
