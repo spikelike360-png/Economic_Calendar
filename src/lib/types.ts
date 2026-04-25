@@ -68,7 +68,11 @@ export interface COTPosition {
   long: number;
   short: number;
   net: number;
+  changeLong: number;
+  changeShort: number;
   changeNet: number;
+  spread?: number;
+  changeSpread?: number;
 }
 
 export interface COTHistoryPoint {

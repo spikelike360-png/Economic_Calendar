@@ -24,12 +24,14 @@ interface RawRow {
   openInterest: number;
   ncLong: number;
   ncShort: number;
+  ncSpread: number;
   commLong: number;
   commShort: number;
   nrLong: number;
   nrShort: number;
   changeNcLong: number;
   changeNcShort: number;
+  changeNcSpread: number;
   changeCommLong: number;
   changeCommShort: number;
   changeNrLong: number;
@@ -94,12 +96,14 @@ async function fetchYearXls(year: number): Promise<RawRow[]> {
     const oiCol         = col('Open_Interest_All');
     const ncLongCol     = col('NonComm_Positions_Long_All');
     const ncShortCol    = col('NonComm_Positions_Short_All');
+    const ncSpreadCol   = col('NonComm_Positions_Spread_All');
     const cLongCol      = col('Comm_Positions_Long_All');
     const cShortCol     = col('Comm_Positions_Short_All');
     const nrLongCol     = col('NonRept_Positions_Long_All');
     const nrShortCol    = col('NonRept_Positions_Short_All');
     const chNcLCol      = col('Change_in_NonComm_Long_All');
     const chNcSCol      = col('Change_in_NonComm_Short_All');
+    const chNcSpCol     = col('Change_in_NonComm_Spread_All');
     const chCLCol       = col('Change_in_Comm_Long_All');
     const chCSCol       = col('Change_in_Comm_Short_All');
     const chNrLCol      = col('Change_in_NonRept_Long_All');
@@ -111,21 +115,23 @@ async function fetchYearXls(year: number): Promise<RawRow[]> {
       const date = parseYYMMDD(r[dateCol]);
       if (!date) continue;
       result.push({
-        market:         String(r[marketCol] ?? '').trim(),
+        market:           String(r[marketCol] ?? '').trim(),
         date,
-        openInterest:   toNum(r[oiCol]),
-        ncLong:         toNum(r[ncLongCol]),
-        ncShort:        toNum(r[ncShortCol]),
-        commLong:       toNum(r[cLongCol]),
-        commShort:      toNum(r[cShortCol]),
-        nrLong:         toNum(r[nrLongCol]),
-        nrShort:        toNum(r[nrShortCol]),
-        changeNcLong:   toNum(r[chNcLCol]),
-        changeNcShort:  toNum(r[chNcSCol]),
-        changeCommLong: toNum(r[chCLCol]),
-        changeCommShort:toNum(r[chCSCol]),
-        changeNrLong:   toNum(r[chNrLCol]),
-        changeNrShort:  toNum(r[chNrSCol]),
+        openInterest:     toNum(r[oiCol]),
+        ncLong:           toNum(r[ncLongCol]),
+        ncShort:          toNum(r[ncShortCol]),
+        ncSpread:         toNum(r[ncSpreadCol]),
+        commLong:         toNum(r[cLongCol]),
+        commShort:        toNum(r[cShortCol]),
+        nrLong:           toNum(r[nrLongCol]),
+        nrShort:          toNum(r[nrShortCol]),
+        changeNcLong:     toNum(r[chNcLCol]),
+        changeNcShort:    toNum(r[chNcSCol]),
+        changeNcSpread:   toNum(r[chNcSpCol]),
+        changeCommLong:   toNum(r[chCLCol]),
+        changeCommShort:  toNum(r[chCSCol]),
+        changeNrLong:     toNum(r[chNrLCol]),
+        changeNrShort:    toNum(r[chNrSCol]),
       });
     }
     console.log(`[COT] ${year}: parsed ${result.length} rows`);
@@ -137,7 +143,7 @@ async function fetchYearXls(year: number): Promise<RawRow[]> {
 }
 
 function makePosition(long: number, short: number, chLong: number, chShort: number): COTPosition {
-  return { long, short, net: long - short, changeNet: chLong - chShort };
+  return { long, short, net: long - short, changeLong: chLong, changeShort: chShort, changeNet: chLong - chShort };
 }
 
 export async function fetchCOTData(): Promise<COTResponse> {
@@ -190,7 +196,11 @@ export async function fetchCOTData(): Promise<COTResponse> {
       category: def.category,
       reportDate: latest.date,
       openInterest: latest.openInterest,
-      nonCommercial: makePosition(latest.ncLong, latest.ncShort, latest.changeNcLong, latest.changeNcShort),
+      nonCommercial: {
+        ...makePosition(latest.ncLong, latest.ncShort, latest.changeNcLong, latest.changeNcShort),
+        spread: latest.ncSpread,
+        changeSpread: latest.changeNcSpread,
+      },
       commercial:    makePosition(latest.commLong, latest.commShort, latest.changeCommLong, latest.changeCommShort),
       nonReportable: makePosition(latest.nrLong, latest.nrShort, latest.changeNrLong, latest.changeNrShort),
       history: history.map((r) => ({ date: r.date, net: r.ncLong - r.ncShort })),

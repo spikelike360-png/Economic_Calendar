@@ -169,6 +169,79 @@ function Sparkline({ history, net, height = 72 }: { history: COTHistoryPoint[]; 
 const fmt = (n: number) => new Intl.NumberFormat('en-US', { maximumFractionDigits: 0 }).format(n);
 const fmtDelta = (n: number) => (n >= 0 ? '+' : '') + fmt(n);
 
+function ChangeBadge({ value }: { value: number }) {
+  const pos = value >= 0;
+  return (
+    <span className={clsx(
+      'inline-flex items-center px-1.5 py-0.5 rounded text-[11px] font-mono font-semibold',
+      pos ? 'bg-emerald-500/15 text-emerald-400' : 'bg-red-500/15 text-red-400',
+    )}>
+      {pos ? '+' : ''}{fmt(value)}
+    </span>
+  );
+}
+
+function PositionBlock({
+  label, labelColor, pos, openInterest, compact,
+}: {
+  label: string;
+  labelColor: string;
+  pos: import('@/lib/types').COTPosition;
+  openInterest: number;
+  compact?: boolean;
+}) {
+  const hasSpreads = (pos.spread ?? 0) > 0;
+  const pct = (n: number) => openInterest > 0 ? (n / openInterest * 100).toFixed(1) + '%' : '—';
+
+  return (
+    <div className="rounded-xl border border-slate-800/60 overflow-hidden text-sm">
+      {/* Category header */}
+      <div className="px-3 py-2 bg-[#080b14] border-b border-slate-800/60 flex items-center justify-between gap-2">
+        <span className={clsx('text-[11px] font-semibold uppercase tracking-wider', labelColor)}>{label}</span>
+        <span className={clsx('font-mono text-xs font-bold tabular-nums', pos.net >= 0 ? 'text-emerald-400' : 'text-red-400')}>
+          {fmtDelta(pos.net)}
+        </span>
+      </div>
+
+      <div className="px-3 py-2.5 space-y-2.5">
+        {/* Column headers */}
+        <div className={clsx('grid gap-2 text-[10px] text-slate-600 uppercase tracking-wider', hasSpreads ? 'grid-cols-3' : 'grid-cols-2')}>
+          <span>Long</span>
+          <span className="text-right">Short</span>
+          {hasSpreads && <span className="text-right">Spreads</span>}
+        </div>
+
+        {/* Position numbers */}
+        <div className={clsx('grid gap-2 font-mono tabular-nums text-slate-200', compact ? 'text-xs' : 'text-sm', hasSpreads ? 'grid-cols-3' : 'grid-cols-2')}>
+          <span>{fmt(pos.long)}</span>
+          <span className="text-right">{fmt(pos.short)}</span>
+          {hasSpreads && <span className="text-right">{fmt(pos.spread!)}</span>}
+        </div>
+
+        {/* Changes */}
+        <div className="pt-1.5 border-t border-slate-800/40 space-y-1.5">
+          <span className="text-[10px] text-slate-600 uppercase tracking-wider">Changes</span>
+          <div className={clsx('grid gap-2', hasSpreads ? 'grid-cols-3' : 'grid-cols-2')}>
+            <ChangeBadge value={pos.changeLong} />
+            <div className="flex justify-end"><ChangeBadge value={pos.changeShort} /></div>
+            {hasSpreads && <div className="flex justify-end"><ChangeBadge value={pos.changeSpread!} /></div>}
+          </div>
+        </div>
+
+        {/* % of Open Interest */}
+        <div className="pt-1.5 border-t border-slate-800/40 space-y-1.5">
+          <span className="text-[10px] text-slate-600 uppercase tracking-wider">% of Open Interest</span>
+          <div className={clsx('grid gap-2 font-mono tabular-nums text-slate-500 text-xs', hasSpreads ? 'grid-cols-3' : 'grid-cols-2')}>
+            <span>{pct(pos.long)}</span>
+            <span className="text-right">{pct(pos.short)}</span>
+            {hasSpreads && <span className="text-right">{pct(pos.spread!)}</span>}
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 function formatDate(s: string) {
   const [y, m, d] = s.split('-').map(Number);
   return new Date(y, m - 1, d).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
@@ -176,15 +249,15 @@ function formatDate(s: string) {
 
 // ---------- Detail panel ----------
 
-function DetailPanel({ contract, sparklineHeight = 88 }: { contract: COTContract; sparklineHeight?: number }) {
+function DetailPanel({ contract, sparklineHeight = 88, compact = false }: { contract: COTContract; sparklineHeight?: number; compact?: boolean }) {
   const nc   = contract.nonCommercial;
   const comm = contract.commercial;
   const nr   = contract.nonReportable;
 
-  const rows = [
-    { label: 'Non-Commercial', pos: nc,   color: 'text-violet-400' },
-    { label: 'Commercial',     pos: comm, color: 'text-sky-400'    },
-    { label: 'Non-Reportable', pos: nr,   color: 'text-slate-400'  },
+  const blocks = [
+    { label: 'Non-Commercial', labelColor: 'text-violet-400', pos: nc   },
+    { label: 'Commercial',     labelColor: 'text-sky-400',    pos: comm },
+    { label: 'Non-Reportable', labelColor: 'text-slate-500',  pos: nr   },
   ];
 
   return (
@@ -202,40 +275,18 @@ function DetailPanel({ contract, sparklineHeight = 88 }: { contract: COTContract
         <span className="text-xs text-slate-600">· as of {formatDate(contract.reportDate)}</span>
       </div>
 
-      {/* Table */}
-      <div className="rounded-xl border border-slate-800/60 overflow-hidden">
-        <table className="w-full text-sm">
-          <thead>
-            <tr className="bg-[#080b14] border-b border-slate-800/60">
-              <th className="px-4 py-2.5 text-left text-xs font-medium text-slate-600 uppercase tracking-wider">Type</th>
-              <th className="px-4 py-2.5 text-right text-xs font-medium text-slate-600 uppercase tracking-wider">Net</th>
-              <th className="px-4 py-2.5 text-right text-xs font-medium text-slate-600 uppercase tracking-wider">Δ Week</th>
-              <th className="px-4 py-2.5 text-right text-xs font-medium text-slate-600 uppercase tracking-wider">Long</th>
-              <th className="px-4 py-2.5 text-right text-xs font-medium text-slate-600 uppercase tracking-wider">Short</th>
-            </tr>
-          </thead>
-          <tbody>
-            {rows.map(({ label, pos, color }) => (
-              <tr key={label} className="border-b border-slate-800/30 last:border-0 hover:bg-slate-800/20 transition-colors">
-                <td className={clsx('px-4 py-3 font-medium text-sm', color)}>{label}</td>
-                <td className={clsx(
-                  'px-4 py-3 text-right font-mono tabular-nums font-semibold text-sm',
-                  pos.net >= 0 ? 'text-emerald-400' : 'text-red-400',
-                )}>
-                  {fmt(pos.net)}
-                </td>
-                <td className={clsx(
-                  'px-4 py-3 text-right font-mono tabular-nums text-sm',
-                  pos.changeNet > 0 ? 'text-emerald-500' : pos.changeNet < 0 ? 'text-red-500' : 'text-slate-600',
-                )}>
-                  {fmtDelta(pos.changeNet)}
-                </td>
-                <td className="px-4 py-3 text-right font-mono tabular-nums text-slate-400 text-sm">{fmt(pos.long)}</td>
-                <td className="px-4 py-3 text-right font-mono tabular-nums text-slate-400 text-sm">{fmt(pos.short)}</td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
+      {/* Position blocks */}
+      <div className={clsx('grid gap-3', compact ? 'grid-cols-1' : 'grid-cols-3')}>
+        {blocks.map(({ label, labelColor, pos }) => (
+          <PositionBlock
+            key={label}
+            label={label}
+            labelColor={labelColor}
+            pos={pos}
+            openInterest={contract.openInterest}
+            compact={compact}
+          />
+        ))}
       </div>
     </div>
   );
@@ -279,7 +330,7 @@ function ComparePanel({
         </optgroup>
       </select>
 
-      {contract && <DetailPanel contract={contract} />}
+      {contract && <DetailPanel contract={contract} compact />}
     </div>
   );
 }
