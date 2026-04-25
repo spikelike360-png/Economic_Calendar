@@ -5,16 +5,17 @@ import type { COTContract, COTPosition, COTResponse } from '@/lib/types';
 const HISTORY_WEEKS = 26;
 const CFTC_BASE = 'https://www.cftc.gov/files/dea/history';
 
+// match strings use startsWith (case-insensitive) — keep specific enough to avoid micro/cross-rate contracts
 export const CONTRACT_DEFS = [
-  { key: 'eur', match: 'EURO FX',               label: 'EUR/USD',   exchange: 'CME',   category: 'currency'  },
-  { key: 'gbp', match: 'BRITISH POUND',          label: 'GBP/USD',   exchange: 'CME',   category: 'currency'  },
-  { key: 'jpy', match: 'JAPANESE YEN',           label: 'JPY',       exchange: 'CME',   category: 'currency'  },
+  { key: 'eur', match: 'EURO FX -',              label: 'EUR/USD',   exchange: 'CME',   category: 'currency'  },
+  { key: 'gbp', match: 'BRITISH POUND -',        label: 'GBP/USD',   exchange: 'CME',   category: 'currency'  },
+  { key: 'jpy', match: 'JAPANESE YEN -',         label: 'JPY',       exchange: 'CME',   category: 'currency'  },
   { key: 'cad', match: 'CANADIAN DOLLAR',        label: 'CAD',       exchange: 'CME',   category: 'currency'  },
   { key: 'aud', match: 'AUSTRALIAN DOLLAR',      label: 'AUD/USD',   exchange: 'CME',   category: 'currency'  },
-  { key: 'dxy', match: 'USD INDEX',               label: 'USD Index', exchange: 'ICE',   category: 'currency'  },
+  { key: 'dxy', match: 'USD INDEX',              label: 'USD Index', exchange: 'ICE',   category: 'currency'  },
   { key: 'gold',match: 'GOLD - COMMODITY',       label: 'Gold',      exchange: 'COMEX', category: 'commodity' },
-  { key: 'wti', match: 'CRUDE OIL, LIGHT SWEET', label: 'WTI Crude', exchange: 'NYMEX', category: 'commodity' },
-  { key: 'spx', match: 'E-MINI S&P 500',         label: 'S&P 500',   exchange: 'CME',   category: 'commodity' },
+  { key: 'wti', match: 'CRUDE OIL, LIGHT SWEET', label: 'WTI Crude', exchange: 'ICE',   category: 'commodity' },
+  { key: 'spx', match: 'E-MINI S&P 500 -',       label: 'S&P 500',   exchange: 'CME',   category: 'commodity' },
   { key: 'xag', match: 'SILVER - COMMODITY',     label: 'Silver',    exchange: 'COMEX', category: 'commodity' },
 ] as const;
 
@@ -175,7 +176,7 @@ export async function fetchCOTData(): Promise<COTResponse> {
     const matchUpper = def.match.toUpperCase();
     let rows: RawRow[] | undefined;
     for (const market of Array.from(byMarket.keys())) {
-      if (market.toUpperCase().includes(matchUpper)) {
+      if (market.toUpperCase().startsWith(matchUpper)) {
         rows = byMarket.get(market);
         break;
       }
