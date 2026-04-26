@@ -76,7 +76,7 @@ export default function CalendarTable({ events }: Props) {
     <div className="overflow-x-auto">
       <table className="w-full text-sm border-collapse">
         <thead>
-          <tr className="border-b border-slate-800/60 text-xs text-slate-600 uppercase tracking-wider bg-[#080b14]">
+          <tr className="border-b border-slate-800/60 text-xs text-slate-600 uppercase tracking-wider bg-[#0d0d0f]">
             <th className="px-3 py-2.5 text-left font-medium w-20">Time</th>
             <th className="px-3 py-2.5 text-left font-medium w-20">CCY</th>
             <th className="px-3 py-2.5 text-left font-medium w-28">Impact</th>
@@ -99,8 +99,8 @@ export default function CalendarTable({ events }: Props) {
                   className={clsx(
                     'border-t border-slate-800/60 cursor-pointer select-none group',
                     isToday
-                      ? 'bg-violet-500/5 hover:bg-violet-500/10'
-                      : 'bg-[#080b14]/60 hover:bg-slate-800/40',
+                      ? 'bg-amber-500/5 hover:bg-amber-500/10'
+                      : 'bg-[#0d0d0f]/60 hover:bg-slate-800/40',
                   )}
                   onClick={() => toggle(date)}
                 >
@@ -112,15 +112,15 @@ export default function CalendarTable({ events }: Props) {
                         <ChevronDown className="w-3.5 h-3.5 text-slate-600 group-hover:text-slate-400 shrink-0 transition-colors" />
                       )}
                       {isToday && (
-                        <span className="inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-xs font-semibold bg-violet-500/20 text-violet-300 border border-violet-500/30">
-                          <span className="w-1.5 h-1.5 rounded-full bg-violet-400 animate-pulse" />
+                        <span className="inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-xs font-semibold bg-amber-500/20 text-amber-300 border border-amber-500/30">
+                          <span className="w-1.5 h-1.5 rounded-full bg-amber-400 animate-pulse" />
                           TODAY
                         </span>
                       )}
                       <span
                         className={clsx(
                           'text-xs font-semibold tracking-wide',
-                          isToday ? 'text-violet-300' : isPast ? 'text-slate-700' : 'text-slate-500',
+                          isToday ? 'text-amber-300' : isPast ? 'text-slate-700' : 'text-slate-500',
                         )}
                       >
                         {formatDisplayDate(date)}
@@ -143,8 +143,8 @@ export default function CalendarTable({ events }: Props) {
                           ? 'opacity-40 hover:opacity-60'
                           : isPast
                             ? 'opacity-60 hover:opacity-80'
-                            : 'hover:bg-violet-500/5',
-                        isToday && 'bg-violet-500/[0.02]',
+                            : 'hover:bg-amber-500/5',
+                        isToday && 'bg-amber-500/[0.02]',
                       )}
                     >
                       <td className="px-3 py-2.5 font-mono text-xs text-slate-500 whitespace-nowrap w-20">

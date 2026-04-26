@@ -20,10 +20,10 @@ interface Props {
 
 export default function Sidebar({ active, onNavigate }: Props) {
   return (
-    <aside className="w-14 shrink-0 flex flex-col items-center py-4 gap-2 bg-[#05080f] border-r border-slate-800/60 h-screen sticky top-0">
+    <aside className="w-14 shrink-0 flex flex-col items-center py-4 gap-2 bg-[#09090b] border-r border-slate-800/60 h-screen sticky top-0">
       {/* Logo */}
-      <div className="mb-4 p-2 rounded-xl bg-violet-500/15 border border-violet-500/25">
-        <BarChart2 className="w-4 h-4 text-violet-400" />
+      <div className="mb-4 p-2 rounded-md bg-amber-500/15 border border-amber-500/25">
+        <BarChart2 className="w-4 h-4 text-amber-400" />
       </div>
 
       {/* Nav items */}
@@ -33,9 +33,9 @@ export default function Sidebar({ active, onNavigate }: Props) {
           title={label}
           onClick={() => onNavigate(id)}
           className={clsx(
-            'w-10 h-10 flex items-center justify-center rounded-xl transition-colors',
+            'w-10 h-10 flex items-center justify-center rounded-md transition-colors',
             active === id
-              ? 'bg-violet-500/20 border border-violet-500/35 text-violet-300'
+              ? 'bg-amber-500/20 border border-amber-500/35 text-amber-300'
               : 'text-slate-600 hover:text-slate-300 hover:bg-slate-800/60 border border-transparent',
           )}
         >

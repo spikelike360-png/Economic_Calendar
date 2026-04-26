@@ -100,7 +100,7 @@ export default function NotesSection() {
 
   if (!mounted) {
     return (
-      <div id="notes" className="rounded-2xl border border-slate-800/60 bg-[#0a0d16] p-6 animate-pulse">
+      <div id="notes" className="rounded-lg border border-slate-800/60 bg-[#111113] p-6 animate-pulse">
         <div className="h-4 w-32 rounded bg-slate-800/60 mb-4" />
         <div className="h-48 rounded bg-slate-800/40" />
       </div>
@@ -108,12 +108,12 @@ export default function NotesSection() {
   }
 
   return (
-    <div id="notes" className="rounded-2xl border border-slate-800/60 bg-[#0a0d16] overflow-hidden shadow-xl shadow-black/20">
+    <div id="notes" className="rounded-lg border border-slate-800/60 bg-[#111113] overflow-hidden shadow-xl shadow-black/20">
       {/* Header */}
-      <div className="flex items-center justify-between px-5 py-4 border-b border-slate-800/60 bg-[#080b14]">
+      <div className="flex items-center justify-between px-5 py-4 border-b border-slate-800/60 bg-[#0d0d0f]">
         <div className="flex items-center gap-3">
-          <div className="p-2 rounded-xl bg-violet-500/10 border border-violet-500/20">
-            <NotebookPen className="w-4 h-4 text-violet-400" />
+          <div className="p-2 rounded-md bg-amber-500/10 border border-amber-500/20">
+            <NotebookPen className="w-4 h-4 text-amber-400" />
           </div>
           <div>
             <h2 className="text-sm font-semibold text-slate-100 tracking-wide">Notes</h2>
@@ -122,7 +122,7 @@ export default function NotesSection() {
         </div>
         <button
           onClick={addNote}
-          className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-violet-500/10 border border-violet-500/25 text-xs text-violet-300 hover:bg-violet-500/20 hover:border-violet-500/40 transition-colors"
+          className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-amber-500/10 border border-amber-500/25 text-xs text-amber-300 hover:bg-amber-500/20 hover:border-amber-500/40 transition-colors"
         >
           <Plus className="w-3.5 h-3.5" />
           New Note
@@ -131,7 +131,7 @@ export default function NotesSection() {
 
       <div className="flex min-h-[380px]">
         {/* Sidebar */}
-        <div className="w-48 shrink-0 border-r border-slate-800/60 bg-[#080b14] flex flex-col">
+        <div className="w-48 shrink-0 border-r border-slate-800/60 bg-[#0d0d0f] flex flex-col">
           <div className="flex-1 overflow-y-auto py-2">
             {notes.map((note) => (
               <button
@@ -140,21 +140,21 @@ export default function NotesSection() {
                 className={clsx(
                   'w-full text-left px-3 py-2.5 flex items-start gap-2 group transition-colors',
                   activeId === note.id
-                    ? 'bg-violet-500/10 border-r-2 border-violet-500'
+                    ? 'bg-amber-500/10 border-r-2 border-amber-500'
                     : 'hover:bg-slate-800/40 border-r-2 border-transparent',
                 )}
               >
                 <FileText
                   className={clsx(
                     'w-3.5 h-3.5 mt-0.5 shrink-0',
-                    activeId === note.id ? 'text-violet-400' : 'text-slate-700',
+                    activeId === note.id ? 'text-amber-400' : 'text-slate-700',
                   )}
                 />
                 <div className="min-w-0 flex-1">
                   <p
                     className={clsx(
                       'text-xs font-medium truncate',
-                      activeId === note.id ? 'text-violet-300' : 'text-slate-500',
+                      activeId === note.id ? 'text-amber-300' : 'text-slate-500',
                     )}
                   >
                     {note.title}
@@ -171,7 +171,7 @@ export default function NotesSection() {
         {/* Editor */}
         {activeNote ? (
           <div className="flex-1 flex flex-col">
-            <div className="flex items-center gap-2 px-4 py-2.5 border-b border-slate-800/60 bg-[#0a0d16]">
+            <div className="flex items-center gap-2 px-4 py-2.5 border-b border-slate-800/60 bg-[#111113]">
               <input
                 type="text"
                 value={activeNote.title}

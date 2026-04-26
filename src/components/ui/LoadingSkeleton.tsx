@@ -27,7 +27,7 @@ export function CalendarSkeleton() {
 
 export function MetricSkeleton() {
   return (
-    <div className="rounded-xl border border-slate-800 bg-slate-900 p-4 space-y-3 animate-pulse">
+    <div className="rounded-md border border-slate-800 bg-slate-900 p-4 space-y-3 animate-pulse">
       <div className="h-4 w-32 rounded bg-slate-700/60" />
       <div className="grid grid-cols-2 gap-3">
         {[1, 2, 3, 4].map((i) => (

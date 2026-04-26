@@ -140,9 +140,9 @@ export default function CalendarSection() {
   };
 
   return (
-    <div id="calendar" className="rounded-2xl border border-slate-800/60 bg-[#0a0d16] overflow-hidden shadow-xl shadow-black/30">
+    <div id="calendar" className="rounded-lg border border-slate-800/60 bg-[#111113] overflow-hidden shadow-xl shadow-black/30">
       {/* Section header */}
-      <div className="flex items-center justify-between px-5 py-4 border-b border-slate-800/60 bg-[#080b14]">
+      <div className="flex items-center justify-between px-5 py-4 border-b border-slate-800/60 bg-[#0d0d0f]">
         <div>
           <h2 className="text-sm font-semibold text-slate-100 tracking-wide">Economic Calendar</h2>
           <p className="text-xs text-slate-600 mt-0.5">
@@ -173,7 +173,7 @@ export default function CalendarSection() {
           <button
             onClick={() => fetchData(true)}
             disabled={loading || refreshing}
-            className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-slate-800/60 border border-slate-700/60 text-xs text-slate-400 hover:bg-violet-500/10 hover:text-violet-300 hover:border-violet-500/30 transition-colors disabled:opacity-40"
+            className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-slate-800/60 border border-slate-700/60 text-xs text-slate-400 hover:bg-amber-500/10 hover:text-amber-300 hover:border-amber-500/30 transition-colors disabled:opacity-40"
           >
             <RefreshCw className={clsx('w-3.5 h-3.5', refreshing && 'animate-spin')} />
             <span>Refresh</span>

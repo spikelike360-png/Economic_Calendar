@@ -13,7 +13,7 @@ export default function Home() {
   const [active, setActive] = useState<Section>('calendar');
 
   return (
-    <div className="flex h-screen overflow-hidden bg-[#05080f]">
+    <div className="flex h-screen overflow-hidden bg-[#09090b]">
       <Sidebar active={active} onNavigate={setActive} />
       <div className="flex-1 flex flex-col overflow-hidden">
         <Header activeSection={active} />

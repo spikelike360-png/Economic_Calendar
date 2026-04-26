@@ -13,14 +13,14 @@ const CATEGORY_TABS: { value: NewsCategory | 'all'; label: string; icon: React.E
 ];
 
 const CATEGORY_COLOR: Record<NewsCategory, string> = {
-  macro:    'bg-violet-500/20 text-violet-300 border-violet-500/30',
+  macro:    'bg-amber-500/20 text-amber-300 border-amber-500/30',
   markets:  'bg-sky-500/20 text-sky-300 border-sky-500/30',
   earnings: 'bg-emerald-500/20 text-emerald-300 border-emerald-500/30',
   general:  'bg-slate-500/20 text-slate-400 border-slate-500/30',
 };
 
 const SOURCE_BADGE: Record<string, string> = {
-  'Yahoo Finance':  'text-violet-400',
+  'Yahoo Finance':  'text-amber-400',
   'CNBC':           'text-amber-400',
   'MarketWatch':    'text-sky-400',
   'MarketWatch RT': 'text-sky-300',
@@ -95,7 +95,7 @@ export default function NewsSection() {
         <button
           onClick={() => { _newsCache = null; load(true); }}
           disabled={refreshing}
-          className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-violet-500/30 bg-violet-500/10 text-violet-300 text-xs font-medium hover:bg-violet-500/20 transition-colors disabled:opacity-50"
+          className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-amber-500/30 bg-amber-500/10 text-amber-300 text-xs font-medium hover:bg-amber-500/20 transition-colors disabled:opacity-50"
         >
           <RefreshCw size={12} className={refreshing ? 'animate-spin' : ''} />
           Refresh
@@ -111,7 +111,7 @@ export default function NewsSection() {
             className={clsx(
               'flex items-center gap-1.5 px-3 py-1.5 rounded-lg border text-xs font-medium transition-colors',
               activeTab === value
-                ? 'border-violet-500/40 bg-violet-500/15 text-violet-300'
+                ? 'border-amber-500/40 bg-amber-500/15 text-amber-300'
                 : 'border-slate-700/60 text-slate-500 hover:text-slate-300 hover:border-slate-600',
             )}
           >
@@ -127,11 +127,11 @@ export default function NewsSection() {
       </div>
 
       {/* Content */}
-      <div className="flex-1 overflow-y-auto rounded-2xl bg-[#0a0d16] border border-slate-800/60">
+      <div className="flex-1 overflow-y-auto rounded-lg bg-[#111113] border border-slate-800/60">
         {loading ? (
           <div className="flex items-center justify-center h-64">
             <div className="flex flex-col items-center gap-3">
-              <RefreshCw size={20} className="animate-spin text-violet-400" />
+              <RefreshCw size={20} className="animate-spin text-amber-400" />
               <span className="text-sm text-slate-500">Loading news...</span>
             </div>
           </div>

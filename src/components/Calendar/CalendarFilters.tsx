@@ -23,7 +23,7 @@ const DATE_OPTIONS: { value: DateFilter; label: string }[] = [
 const CURRENCY_COLOR: Record<Currency, string> = {
   USD: 'border-sky-500/40 text-sky-400 bg-sky-500/15',
   EUR: 'border-indigo-500/40 text-indigo-400 bg-indigo-500/15',
-  GBP: 'border-violet-500/40 text-violet-400 bg-violet-500/15',
+  GBP: 'border-purple-500/40 text-purple-400 bg-purple-500/15',
   JPY: 'border-rose-500/40 text-rose-400 bg-rose-500/15',
   CAD: 'border-orange-500/40 text-orange-400 bg-orange-500/15',
   AUD: 'border-amber-500/40 text-amber-400 bg-amber-500/15',
@@ -63,7 +63,7 @@ export default function CalendarFilters({ filters, onChange, totalCount, filtere
   const allImpacts = filters.impacts.length === 0;
 
   return (
-    <div className="border-b border-slate-800/60 bg-[#080b14]/80 px-4 py-3 space-y-2.5">
+    <div className="border-b border-slate-800/60 bg-[#0d0d0f]/80 px-4 py-3 space-y-2.5">
       {/* Row 1: Currency */}
       <div className="flex flex-wrap items-center gap-2">
         <span className="text-xs text-slate-600 uppercase tracking-wider w-16 shrink-0">Currency</span>
@@ -72,7 +72,7 @@ export default function CalendarFilters({ filters, onChange, totalCount, filtere
           className={clsx(
             'px-2.5 py-1 rounded border text-xs font-medium transition-colors',
             allCurrencies
-              ? 'border-violet-500/40 text-violet-300 bg-violet-500/15'
+              ? 'border-amber-500/40 text-amber-300 bg-amber-500/15'
               : 'border-slate-700/60 text-slate-500 hover:text-slate-300 hover:border-slate-600',
           )}
         >
@@ -102,7 +102,7 @@ export default function CalendarFilters({ filters, onChange, totalCount, filtere
           className={clsx(
             'px-2.5 py-1 rounded border text-xs font-medium transition-colors',
             allImpacts
-              ? 'border-violet-500/40 text-violet-300 bg-violet-500/15'
+              ? 'border-amber-500/40 text-amber-300 bg-amber-500/15'
               : 'border-slate-700/60 text-slate-500 hover:text-slate-300 hover:border-slate-600',
           )}
         >
@@ -136,7 +136,7 @@ export default function CalendarFilters({ filters, onChange, totalCount, filtere
               className={clsx(
                 'px-2.5 py-1 rounded border text-xs font-medium transition-colors',
                 filters.dateFilter === value
-                  ? 'border-violet-500/40 text-violet-300 bg-violet-500/15'
+                  ? 'border-amber-500/40 text-amber-300 bg-amber-500/15'
                   : 'border-slate-700/60 text-slate-500 hover:text-slate-300 hover:border-slate-600',
               )}
             >

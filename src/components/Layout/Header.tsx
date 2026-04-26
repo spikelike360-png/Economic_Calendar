@@ -48,7 +48,7 @@ export default function Header({ activeSection }: Props) {
   }, []);
 
   return (
-    <header className="h-14 shrink-0 border-b border-slate-800/60 bg-[#05080f]/95 backdrop-blur-sm flex items-center justify-between px-6">
+    <header className="h-14 shrink-0 border-b border-slate-800/60 bg-[#09090b]/95 backdrop-blur-sm flex items-center justify-between px-6">
       <div>
         <h1 className="text-sm font-semibold text-slate-100 leading-none">
           {SECTION_TITLE[activeSection]}

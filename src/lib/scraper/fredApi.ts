@@ -118,7 +118,7 @@ async function fetchFredObs(seriesId: string, apiKey: string, units?: string): P
       limit: '3',
       ...(units ? { units } : {}),
     });
-    const res = await fetch(`${FRED_BASE}?${params}`, { signal: AbortSignal.timeout(10_000) });
+    const res = await fetch(`${FRED_BASE}?${params}`, { signal: AbortSignal.timeout(7_000) });
     if (!res.ok) return null;
     const json = await res.json();
     const obs: FredObs[] = (json.observations ?? []).filter(
@@ -133,7 +133,7 @@ async function fetchFredObs(seriesId: string, apiKey: string, units?: string): P
 async function fetchWorldBankObs(country: string, indicator: string): Promise<WbObs[] | null> {
   try {
     const url = `${WB_BASE}/${country}/indicator/${indicator}?format=json&mrv=3&per_page=3`;
-    const res = await fetch(url, { signal: AbortSignal.timeout(10_000) });
+    const res = await fetch(url, { signal: AbortSignal.timeout(7_000) });
     if (!res.ok) return null;
     const json: [unknown, WbObs[]] = await res.json();
     const obs = json[1]?.filter((o) => o.value != null) ?? [];

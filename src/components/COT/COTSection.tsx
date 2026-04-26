@@ -117,7 +117,7 @@ function Sparkline({ history, net, height = 72 }: { history: COTHistoryPoint[]; 
 
       {/* Last-point dot */}
       <div
-        className="absolute w-2.5 h-2.5 rounded-full border-2 border-[#0a0d16] -translate-x-1/2 -translate-y-1/2 pointer-events-none"
+        className="absolute w-2.5 h-2.5 rounded-full border-2 border-[#111113] -translate-x-1/2 -translate-y-1/2 pointer-events-none"
         style={{ left: `${lastXPct}%`, top: `${lastYPct}%`, backgroundColor: color }}
       />
 
@@ -151,7 +151,7 @@ function Sparkline({ history, net, height = 72 }: { history: COTHistoryPoint[]; 
                 : { left: `${hovXPct}%`, marginLeft: 14 }),
             }}
           >
-            <div className="bg-[#0d1220] border border-slate-700/80 rounded-lg px-3 py-2 shadow-xl shadow-black/50 min-w-[130px]">
+            <div className="bg-[#111113] border border-slate-700/80 rounded-lg px-3 py-2 shadow-xl shadow-black/50 min-w-[130px]">
               <p className="text-xs text-slate-500 font-mono mb-0.5">{formatShortDate(history[hovered].date)}</p>
               <p className="text-sm font-bold font-mono" style={{ color }}>
                 {fmtTooltip(values[hovered])}
@@ -195,9 +195,9 @@ function PositionBlock({
   const pct = (n: number) => openInterest > 0 ? (n / openInterest * 100).toFixed(1) + '%' : '—';
 
   return (
-    <div className="rounded-xl border border-slate-800/60 overflow-hidden text-sm">
+    <div className="rounded-md border border-slate-800/60 overflow-hidden text-sm">
       {/* Category header */}
-      <div className="px-3 py-2 bg-[#080b14] border-b border-slate-800/60 flex items-center justify-between gap-2">
+      <div className="px-3 py-2 bg-[#0d0d0f] border-b border-slate-800/60 flex items-center justify-between gap-2">
         <span className={clsx('text-[11px] font-semibold uppercase tracking-wider', labelColor)}>{label}</span>
         <span className={clsx('font-mono text-xs font-bold tabular-nums', pos.net >= 0 ? 'text-emerald-400' : 'text-red-400')}>
           {fmtDelta(pos.net)}
@@ -256,7 +256,7 @@ function DetailPanel({ contract, sparklineHeight = 88, compact = false }: { cont
   const nr   = contract.nonReportable;
 
   const blocks = [
-    { label: 'Non-Commercial', labelColor: 'text-violet-400', pos: nc   },
+    { label: 'Non-Commercial', labelColor: 'text-amber-400', pos: nc   },
     { label: 'Commercial',     labelColor: 'text-sky-400',    pos: comm },
     { label: 'Non-Reportable', labelColor: 'text-slate-500',  pos: nr   },
   ];
@@ -317,7 +317,7 @@ function ComparePanel({
       <select
         value={selectedKey}
         onChange={(e) => onSelect(e.target.value)}
-        className="w-full bg-[#080b14] border border-slate-700/60 rounded-lg px-3 py-2 text-sm text-slate-200 font-semibold focus:outline-none focus:border-violet-500/50 cursor-pointer"
+        className="w-full bg-[#0d0d0f] border border-slate-700/60 rounded-lg px-3 py-2 text-sm text-slate-200 font-semibold focus:outline-none focus:border-amber-500/50 cursor-pointer"
       >
         <optgroup label="Currencies">
           {contracts.filter((c) => c.category === 'currency').map((c) => (
@@ -353,7 +353,7 @@ function AssetList({
   const filtered = contracts.filter((c) => c.category === tab);
 
   return (
-    <div className="w-48 shrink-0 flex flex-col border-r border-slate-800/60 bg-[#080b14]/40">
+    <div className="w-48 shrink-0 flex flex-col border-r border-slate-800/60 bg-[#0d0d0f]/40">
       {/* Tabs */}
       <div className="flex border-b border-slate-800/60 px-2 pt-2 gap-1">
         {(['currency', 'commodity'] as Tab[]).map((t) => (
@@ -362,7 +362,7 @@ function AssetList({
             onClick={() => setTab(t)}
             className={clsx(
               'flex-1 pb-2 text-xs font-medium transition-colors rounded-t',
-              tab === t ? 'text-violet-300 border-b-2 border-violet-500' : 'text-slate-600 hover:text-slate-400',
+              tab === t ? 'text-amber-300 border-b-2 border-amber-500' : 'text-slate-600 hover:text-slate-400',
             )}
           >
             {t === 'currency' ? 'FX' : 'Commod'}
@@ -382,7 +382,7 @@ function AssetList({
               className={clsx(
                 'w-full text-left px-3 py-2.5 transition-colors flex items-center justify-between gap-2',
                 isActive
-                  ? 'bg-violet-500/15 border-r-2 border-violet-500 text-violet-200'
+                  ? 'bg-amber-500/15 border-r-2 border-amber-500 text-amber-200'
                   : 'text-slate-400 hover:bg-slate-800/40 hover:text-slate-200',
               )}
             >
@@ -476,10 +476,10 @@ export default function COTSection() {
   const activeContract = contracts.find((c) => c.key === activeKey) ?? contracts[0];
 
   return (
-    <div className="rounded-2xl border border-slate-800/60 bg-[#0a0d16] overflow-hidden shadow-xl shadow-black/30 flex flex-col" style={{ minHeight: 560 }}>
+    <div className="rounded-lg border border-slate-800/60 bg-[#111113] overflow-hidden shadow-xl shadow-black/30 flex flex-col" style={{ minHeight: 560 }}>
 
       {/* Header */}
-      <div className="flex items-center justify-between px-5 py-4 border-b border-slate-800/60 bg-[#080b14] shrink-0">
+      <div className="flex items-center justify-between px-5 py-4 border-b border-slate-800/60 bg-[#0d0d0f] shrink-0">
         <div>
           <h2 className="text-sm font-semibold text-slate-100 tracking-wide">Commitment of Traders</h2>
           <p className="text-xs text-slate-600 mt-0.5">CFTC · Legacy Futures Only · Weekly</p>
@@ -505,8 +505,8 @@ export default function COTSection() {
             className={clsx(
               'flex items-center gap-1.5 px-3 py-1.5 rounded-lg border text-xs font-medium transition-colors',
               mode === 'compare'
-                ? 'bg-violet-500/20 border-violet-500/40 text-violet-300'
-                : 'bg-slate-800/60 border-slate-700/60 text-slate-400 hover:bg-violet-500/10 hover:text-violet-300 hover:border-violet-500/30',
+                ? 'bg-amber-500/20 border-amber-500/40 text-amber-300'
+                : 'bg-slate-800/60 border-slate-700/60 text-slate-400 hover:bg-amber-500/10 hover:text-amber-300 hover:border-amber-500/30',
             )}
           >
             {mode === 'compare' ? <X className="w-3.5 h-3.5" /> : <Columns2 className="w-3.5 h-3.5" />}
@@ -517,7 +517,7 @@ export default function COTSection() {
             onClick={() => fetchData(true)}
             disabled={loading || refreshing}
             title="Force refresh from CFTC"
-            className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-slate-800/60 border border-slate-700/60 text-xs text-slate-400 hover:bg-violet-500/10 hover:text-violet-300 hover:border-violet-500/30 transition-colors disabled:opacity-40"
+            className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-slate-800/60 border border-slate-700/60 text-xs text-slate-400 hover:bg-amber-500/10 hover:text-amber-300 hover:border-amber-500/30 transition-colors disabled:opacity-40"
           >
             <RefreshCw className={clsx('w-3.5 h-3.5', refreshing && 'animate-spin')} />
           </button>

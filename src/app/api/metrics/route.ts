@@ -7,25 +7,38 @@ import type { MetricsResponse } from '@/lib/types';
 const CACHE_KEY = 'metrics';
 const CACHE_TTL = 6 * 60 * 60 * 1000; // 6 hours
 
-export const revalidate = 21600; // Vercel CDN cache — revalidates every 6 hours
+// No module-level revalidate — Cache-Control is set per-response
+// so error/fallback responses are never long-cached by Vercel CDN
 
 export async function GET() {
   const cached = memCache.get<MetricsResponse>(CACHE_KEY);
   if (cached && !cached.isStale) {
-    return NextResponse.json(cached.data);
+    return NextResponse.json(cached.data, {
+      headers: { 'Cache-Control': 'public, s-maxage=21600, stale-while-revalidate=86400' },
+    });
   }
 
   const apiKey = process.env.FRED_API_KEY;
 
-  try {
-    const metrics = apiKey ? await fetchFredMetrics(apiKey) : FALLBACK;
+  if (!apiKey) {
+    return NextResponse.json({
+      metrics: FALLBACK,
+      fetchedAt: new Date().toISOString(),
+      isStale: true,
+      source: 'fallback' as const,
+      error: 'FRED_API_KEY not set — showing static data',
+    } satisfies MetricsResponse, {
+      headers: { 'Cache-Control': 'public, s-maxage=300, stale-while-revalidate=600' },
+    });
+  }
 
+  try {
+    const metrics = await fetchFredMetrics(apiKey);
     const response: MetricsResponse = {
       metrics,
       fetchedAt: new Date().toISOString(),
       isStale: false,
-      source: apiKey ? 'fred' : 'fallback',
-      ...(!apiKey && { error: 'FRED_API_KEY not set — showing static data' }),
+      source: 'fred',
     };
     memCache.set(CACHE_KEY, response, CACHE_TTL);
     return NextResponse.json(response, {
@@ -39,7 +52,9 @@ export async function GET() {
         ...cached.data,
         isStale: true,
         error: 'Data unavailable — showing cached data',
-      } satisfies MetricsResponse);
+      } satisfies MetricsResponse, {
+        headers: { 'Cache-Control': 'no-store' },
+      });
     }
 
     return NextResponse.json({
@@ -47,7 +62,10 @@ export async function GET() {
       fetchedAt: new Date().toISOString(),
       isStale: true,
       source: 'fallback' as const,
-      error: 'Data unavailable — showing static fallback data',
-    } satisfies MetricsResponse);
+      error: 'FRED fetch failed — showing static fallback data',
+    } satisfies MetricsResponse, {
+      status: 503,
+      headers: { 'Cache-Control': 'no-store' },
+    });
   }
 }
