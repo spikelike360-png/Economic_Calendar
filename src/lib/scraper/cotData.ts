@@ -7,11 +7,11 @@ const CFTC_BASE = 'https://www.cftc.gov/files/dea/history';
 
 // match strings use startsWith (case-insensitive) — keep specific enough to avoid micro/cross-rate contracts
 export const CONTRACT_DEFS = [
-  { key: 'eur', match: 'EURO FX -',              label: 'EUR/USD',   exchange: 'CME',   category: 'currency'  },
-  { key: 'gbp', match: 'BRITISH POUND -',        label: 'GBP/USD',   exchange: 'CME',   category: 'currency'  },
+  { key: 'eur', match: 'EURO FX -',              label: 'EUR',       exchange: 'CME',   category: 'currency'  },
+  { key: 'gbp', match: 'BRITISH POUND -',        label: 'GBP',       exchange: 'CME',   category: 'currency'  },
   { key: 'jpy', match: 'JAPANESE YEN -',         label: 'JPY',       exchange: 'CME',   category: 'currency'  },
   { key: 'cad', match: 'CANADIAN DOLLAR',        label: 'CAD',       exchange: 'CME',   category: 'currency'  },
-  { key: 'aud', match: 'AUSTRALIAN DOLLAR',      label: 'AUD/USD',   exchange: 'CME',   category: 'currency'  },
+  { key: 'aud', match: 'AUSTRALIAN DOLLAR',      label: 'AUD',       exchange: 'CME',   category: 'currency'  },
   { key: 'dxy', match: 'USD INDEX',              label: 'USD Index', exchange: 'ICE',   category: 'currency'  },
   { key: 'gold',match: 'GOLD - COMMODITY',       label: 'Gold',      exchange: 'COMEX', category: 'commodity' },
   { key: 'wti', match: 'CRUDE OIL, LIGHT SWEET', label: 'WTI Crude', exchange: 'ICE',   category: 'commodity' },
