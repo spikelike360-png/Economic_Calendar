@@ -4,6 +4,8 @@ import { macroMetrics as FALLBACK } from '@/lib/macroData';
 import { memCache } from '@/lib/scraper/cache';
 import type { MetricsResponse } from '@/lib/types';
 
+export const dynamic = 'force-dynamic'; // never pre-render at build time
+
 const CACHE_KEY = 'metrics';
 const CACHE_TTL = 6 * 60 * 60 * 1000; // 6 hours
 
