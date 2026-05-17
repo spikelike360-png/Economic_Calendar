@@ -313,9 +313,12 @@ function ffWeekParamFromDate(date: Date): string {
 
 function dedup(events: CalendarEvent[]): CalendarEvent[] {
   const seen = new Set<string>();
+  const seenLoose = new Set<string>(); // date|currency|title — catches timezone-shifted duplicates
   return events.filter((e) => {
-    if (seen.has(e.id)) return false;
+    const loose = `${e.date}|${e.currency}|${e.title.toLowerCase().replace(/[^a-z0-9]/g, '')}`;
+    if (seen.has(e.id) || seenLoose.has(loose)) return false;
     seen.add(e.id);
+    seenLoose.add(loose);
     return true;
   });
 }

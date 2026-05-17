@@ -4,7 +4,7 @@ import { memCache } from '@/lib/scraper/cache';
 import { writeCalendarDiskCache } from '@/lib/scraper/calendarDiskCache';
 import type { CalendarResponse } from '@/lib/types';
 
-const CACHE_KEY = 'calendar';
+const CACHE_KEY = 'calendar_v2';
 const CACHE_TTL = 14 * 60 * 1000; // 14 min — slightly under Next.js 15-min revalidate
 
 export const revalidate = 300; // Vercel CDN cache — revalidates every 5 min

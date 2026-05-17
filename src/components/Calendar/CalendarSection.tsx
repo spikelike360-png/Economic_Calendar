@@ -109,7 +109,7 @@ function applyFilters(events: CalendarEvent[], filters: CalendarFilters): Calend
 // Merges historical events across refreshes so past weeks are preserved.
 // Fresh events override stored ones (actuals get updated); old events are kept.
 
-const LS_KEY = 'calendar_v2';
+const LS_KEY = 'calendar_v3';
 const LS_MAX_AGE_DAYS = 365;
 
 function lsRead(): CalendarEvent[] {
