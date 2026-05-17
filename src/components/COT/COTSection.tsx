@@ -1,245 +1,49 @@
 'use client';
 
-import { useCallback, useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { RefreshCw, AlertTriangle, Wifi, WifiOff, Columns2, X } from 'lucide-react';
 import { clsx } from 'clsx';
+import {
+  ResponsiveContainer, ComposedChart, Line,
+  XAxis, YAxis, CartesianGrid, Tooltip, ReferenceLine,
+} from 'recharts';
 import type { COTContract, COTHistoryPoint, COTResponse } from '@/lib/types';
 
-// ---------- Sparkline ----------
+// ---------- Constants ----------
 
-const SVG_W = 600;
-const SVG_H = 200;
-const PAD_X = 0;
-const PAD_Y = 6;
+type Category = 'fx' | 'index' | 'rates' | 'energy' | 'metals' | 'ag' | 'crypto';
+type Span = '1Y' | '2Y' | '5Y' | 'MAX';
 
-function formatShortDate(s: string) {
-  const [y, m, d] = s.split('-').map(Number);
-  return new Date(y, m - 1, d).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: '2-digit' });
-}
+const CAT_LABELS: Record<Category, string> = {
+  fx:     'FX',
+  index:  'Indices',
+  rates:  'Rates',
+  energy: 'Energy',
+  metals: 'Metals',
+  ag:     'Ag',
+  crypto: 'Crypto',
+};
 
-function Sparkline({ history, net, height = 72 }: { history: COTHistoryPoint[]; net: number; height?: number }) {
-  const [hovered, setHovered] = useState<number | null>(null);
-  const animKey = useRef(0);
-  const [animId, setAnimId] = useState(0);
+const CATEGORIES: Category[] = ['fx', 'index', 'rates', 'energy', 'metals', 'ag', 'crypto'];
 
-  useEffect(() => {
-    animKey.current += 1;
-    setAnimId(animKey.current);
-  }, [history]);
+const SPAN_MONTHS: Record<Span, number> = { '1Y': 12, '2Y': 24, '5Y': 60, 'MAX': 9999 };
 
-  if (history.length < 2) return <div className="bg-slate-800/30 rounded" style={{ height }} />;
+// ---------- Formatting ----------
 
-  const values = history.map((h) => h.net);
-  const min = Math.min(...values);
-  const max = Math.max(...values);
-  const range = max - min || 1;
-
-  // SVG coordinate helpers
-  const sx = (i: number) => PAD_X + (i / (values.length - 1)) * (SVG_W - PAD_X * 2);
-  const sy = (v: number) => PAD_Y + (1 - (v - min) / range) * (SVG_H - PAD_Y * 2);
-
-  // Step-line points
-  const pts: string[] = [];
-  for (let i = 0; i < values.length; i++) {
-    if (i > 0) pts.push(`${sx(i).toFixed(1)},${sy(values[i - 1]).toFixed(1)}`);
-    pts.push(`${sx(i).toFixed(1)},${sy(values[i]).toFixed(1)}`);
-  }
-  const linePoints = pts.join(' ');
-
-  // Area fill — close back along bottom
-  const areaPoints = `${sx(0).toFixed(1)},${SVG_H} ${linePoints} ${sx(values.length - 1).toFixed(1)},${SVG_H}`;
-
-  const zeroY = sy(0);
-  const showZero = min < 0 && max > 0;
-  const color = net >= 0 ? '#22c55e' : '#ef4444';
-
-  // Last point — % based for HTML overlay
-  const lastXPct = (values.length - 1) / (values.length - 1) * 100; // = 100%
-  const lastYPct = ((1 - (values[values.length - 1] - min) / range)) * 100;
-
-  // Hover point — % based for HTML overlay
-  const hovXPct = hovered !== null ? (hovered / (values.length - 1)) * 100 : null;
-  const hovYPct = hovered !== null ? ((1 - (values[hovered] - min) / range)) * 100 : null;
-
-  const handleMouseMove = (e: React.MouseEvent<HTMLDivElement>) => {
-    const rect = e.currentTarget.getBoundingClientRect();
-    const relX = (e.clientX - rect.left) / rect.width;
-    const idx = Math.max(0, Math.min(values.length - 1, Math.round(relX * (values.length - 1))));
-    setHovered(idx);
-  };
-
-  const fmtTooltip = (v: number) => (v >= 0 ? '+' : '') + new Intl.NumberFormat('en-US').format(v);
-
-  // Tooltip: flip to left when hover is in right 35% of chart
-  const tooltipLeft = hovered !== null && hovered > values.length * 0.65;
-
-  return (
-    <div
-      className="relative w-full cursor-crosshair select-none"
-      style={{ height }}
-      onMouseMove={handleMouseMove}
-      onMouseLeave={() => setHovered(null)}
-    >
-      {/* SVG — line only, no interactive elements */}
-      <svg
-        key={animId}
-        viewBox={`0 0 ${SVG_W} ${SVG_H}`}
-        className="w-full h-full"
-        preserveAspectRatio="none"
-      >
-        {/* Zero line */}
-        {showZero && (
-          <line
-            x1={PAD_X} y1={zeroY.toFixed(1)}
-            x2={SVG_W - PAD_X} y2={zeroY.toFixed(1)}
-            stroke="#334155" strokeWidth="1.5" strokeDasharray="6,4"
-          />
-        )}
-
-        {/* Area fill */}
-        <polyline points={areaPoints} fill={color} opacity="0.07" stroke="none" />
-
-        {/* Animated step line */}
-        <polyline
-          className="cot-line"
-          pathLength="1"
-          points={linePoints}
-          fill="none"
-          stroke={color}
-          strokeWidth="1.5"
-          strokeLinejoin="miter"
-          strokeLinecap="square"
-          opacity="0.9"
-        />
-      </svg>
-
-      {/* HTML overlays — no SVG distortion */}
-
-      {/* Last-point dot */}
-      <div
-        className="absolute w-2.5 h-2.5 rounded-full border-2 border-[#111113] -translate-x-1/2 -translate-y-1/2 pointer-events-none"
-        style={{ left: `${lastXPct}%`, top: `${lastYPct}%`, backgroundColor: color }}
-      />
-
-      {/* Hover elements */}
-      {hovered !== null && hovXPct !== null && hovYPct !== null && (
-        <>
-          {/* Vertical crosshair */}
-          <div
-            className="absolute top-0 bottom-0 w-px pointer-events-none -translate-x-1/2"
-            style={{ left: `${hovXPct}%`, backgroundColor: '#475569', opacity: 0.6 }}
-          />
-
-          {/* Hover dot */}
-          <div
-            className="absolute w-3 h-3 rounded-full -translate-x-1/2 -translate-y-1/2 pointer-events-none ring-4 transition-all duration-75"
-            style={{
-              left: `${hovXPct}%`,
-              top: `${hovYPct}%`,
-              backgroundColor: color,
-              boxShadow: `0 0 0 4px ${color}22`,
-            }}
-          />
-
-          {/* Tooltip */}
-          <div
-            className="absolute pointer-events-none z-10 -translate-y-1/2"
-            style={{
-              top: `${Math.max(10, Math.min(90, hovYPct))}%`,
-              ...(tooltipLeft
-                ? { right: `${100 - hovXPct}%`, marginRight: 14 }
-                : { left: `${hovXPct}%`, marginLeft: 14 }),
-            }}
-          >
-            <div className="bg-[#111113] border border-slate-700/80 rounded-lg px-3 py-2 shadow-xl shadow-black/50 min-w-[130px]">
-              <p className="text-xs text-slate-500 font-mono mb-0.5">{formatShortDate(history[hovered].date)}</p>
-              <p className="text-sm font-bold font-mono" style={{ color }}>
-                {fmtTooltip(values[hovered])}
-              </p>
-            </div>
-          </div>
-        </>
-      )}
-    </div>
-  );
-}
-
-// ---------- Helpers ----------
-
-const fmt = (n: number) => new Intl.NumberFormat('en-US', { maximumFractionDigits: 0 }).format(n);
-const fmtDelta = (n: number) => (n >= 0 ? '+' : '') + fmt(n);
+const fmt  = (n: number) => new Intl.NumberFormat('en-US', { maximumFractionDigits: 0 }).format(Math.abs(n));
+const fmtK = (n: number) => (n >= 0 ? '+' : '−') + (Math.abs(n) >= 1000 ? (Math.abs(n) / 1000).toFixed(1) + 'K' : String(Math.abs(n)));
+const fmtSigned = (n: number) => (n >= 0 ? '+' : '') + fmt(n);
 
 function ChangeBadge({ value }: { value: number | undefined }) {
   if (value === undefined || isNaN(value)) return <span className="text-xs text-slate-700 font-mono">—</span>;
   const pos = value >= 0;
   return (
     <span className={clsx(
-      'inline-flex items-center px-1.5 py-0.5 rounded text-[11px] font-mono font-semibold',
+      'inline-flex items-center justify-center px-1.5 py-0.5 rounded text-[11px] font-mono font-semibold tabular-nums',
       pos ? 'bg-emerald-500/15 text-emerald-400' : 'bg-red-500/15 text-red-400',
     )}>
       {pos ? '+' : ''}{fmt(value)}
     </span>
-  );
-}
-
-function PositionBlock({
-  label, labelColor, pos, openInterest, compact,
-}: {
-  label: string;
-  labelColor: string;
-  pos: import('@/lib/types').COTPosition;
-  openInterest: number;
-  compact?: boolean;
-}) {
-  const hasSpreads = (pos.spread ?? 0) > 0;
-  const pct = (n: number) => openInterest > 0 ? (n / openInterest * 100).toFixed(1) + '%' : '—';
-
-  return (
-    <div className="rounded-md border border-slate-800/60 overflow-hidden text-sm">
-      {/* Category header */}
-      <div className="px-3 py-2 bg-[#0d0d0f] border-b border-slate-800/60 flex items-center justify-between gap-2">
-        <span className={clsx('text-[11px] font-semibold uppercase tracking-wider', labelColor)}>{label}</span>
-        <span className={clsx('font-mono text-xs font-bold tabular-nums', pos.net >= 0 ? 'text-emerald-400' : 'text-red-400')}>
-          {fmtDelta(pos.net)}
-        </span>
-      </div>
-
-      <div className="px-3 py-2.5 space-y-2.5">
-        {/* Column headers */}
-        <div className={clsx('grid gap-2 text-[10px] text-slate-600 uppercase tracking-wider', hasSpreads ? 'grid-cols-3' : 'grid-cols-2')}>
-          <span>Long</span>
-          <span className="text-right">Short</span>
-          {hasSpreads && <span className="text-right">Spreads</span>}
-        </div>
-
-        {/* Position numbers */}
-        <div className={clsx('grid gap-2 font-mono tabular-nums text-slate-200', compact ? 'text-xs' : 'text-sm', hasSpreads ? 'grid-cols-3' : 'grid-cols-2')}>
-          <span>{fmt(pos.long)}</span>
-          <span className="text-right">{fmt(pos.short)}</span>
-          {hasSpreads && <span className="text-right">{fmt(pos.spread!)}</span>}
-        </div>
-
-        {/* Changes */}
-        <div className="pt-1.5 border-t border-slate-800/40 space-y-1.5">
-          <span className="text-[10px] text-slate-600 uppercase tracking-wider">Changes</span>
-          <div className={clsx('grid gap-2', hasSpreads ? 'grid-cols-3' : 'grid-cols-2')}>
-            <ChangeBadge value={pos.changeLong} />
-            <div className="flex justify-end"><ChangeBadge value={pos.changeShort} /></div>
-            {hasSpreads && <div className="flex justify-end"><ChangeBadge value={pos.changeSpread!} /></div>}
-          </div>
-        </div>
-
-        {/* % of Open Interest */}
-        <div className="pt-1.5 border-t border-slate-800/40 space-y-1.5">
-          <span className="text-[10px] text-slate-600 uppercase tracking-wider">% of Open Interest</span>
-          <div className={clsx('grid gap-2 font-mono tabular-nums text-slate-500 text-xs', hasSpreads ? 'grid-cols-3' : 'grid-cols-2')}>
-            <span>{pct(pos.long)}</span>
-            <span className="text-right">{pct(pos.short)}</span>
-            {hasSpreads && <span className="text-right">{pct(pos.spread!)}</span>}
-          </div>
-        </div>
-      </div>
-    </div>
   );
 }
 
@@ -248,52 +52,341 @@ function formatDate(s: string) {
   return new Date(y, m - 1, d).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
 }
 
-// ---------- Detail panel ----------
+function formatAxisDate(s: string) {
+  const [y, m] = s.split('-').map(Number);
+  return `${['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'][m-1]} '${String(y).slice(2)}`;
+}
 
-function DetailPanel({ contract, sparklineHeight = 88, compact = false }: { contract: COTContract; sparklineHeight?: number; compact?: boolean }) {
-  const nc   = contract.nonCommercial;
-  const comm = contract.commercial;
-  const nr   = contract.nonReportable;
+// ---------- COT Data Table ----------
 
-  const blocks = [
-    { label: 'Non-Commercial', labelColor: 'text-amber-400', pos: nc   },
-    { label: 'Commercial',     labelColor: 'text-sky-400',    pos: comm },
-    { label: 'Non-Reportable', labelColor: 'text-slate-500',  pos: nr   },
+function COTTable({ contract }: { contract: COTContract }) {
+  const { nonCommercial: nc, commercial: comm, total, nonReportable: nr } = contract;
+
+  const headerCols = [
+    { label: 'Non-Commercial', span: 3, color: 'text-amber-400' },
+    { label: 'Commercial',     span: 2, color: 'text-sky-400'   },
+    { label: 'Total',          span: 2, color: 'text-emerald-400'},
+    { label: 'Non-Reportable', span: 2, color: 'text-slate-400' },
   ];
 
+  const subCols = ['Long','Short','Spreads','Long','Short','Long','Short','Long','Short'];
+
+  const posRow   = [nc.long, nc.short, nc.spread??0, comm.long, comm.short, total.long, total.short, nr.long, nr.short];
+  const chgRow   = [nc.changeLong, nc.changeShort, nc.changeSpread??0, comm.changeLong, comm.changeShort, total.changeLong, total.changeShort, nr.changeLong, nr.changeShort];
+  const pctRow   = contract.pctOI;
+  const trdRow   = contract.traderCount;
+
   return (
-    <div className="flex flex-col gap-4 h-full">
-      {/* Sparkline */}
-      <div>
-        <p className="text-xs text-slate-600 mb-2">Non-commercial net · last {contract.history.length} weeks</p>
-        <Sparkline history={contract.history} net={nc.net} height={sparklineHeight} />
-      </div>
+    <div className="overflow-x-auto">
+      <table className="w-full text-xs border-collapse min-w-[700px]">
+        <thead>
+          <tr className="border-b border-slate-800">
+            {headerCols.map((h) => (
+              <th
+                key={h.label}
+                colSpan={h.span}
+                className={clsx('py-2 px-2 text-center font-semibold uppercase tracking-wider text-[11px] border-r border-slate-800/60 last:border-r-0', h.color)}
+              >
+                {h.label}
+              </th>
+            ))}
+          </tr>
+          <tr className="border-b border-slate-800/60">
+            {subCols.map((c, i) => (
+              <th key={i} className="py-1.5 px-2 text-center text-[10px] font-medium text-slate-500 uppercase tracking-wider border-r border-slate-800/40 last:border-r-0">
+                {c}
+              </th>
+            ))}
+          </tr>
+        </thead>
+        <tbody>
+          {/* Contract size + Open Interest */}
+          <tr className="bg-slate-900/30 border-b border-slate-800/40">
+            <td colSpan={5} className="px-2 py-1.5 text-slate-500 text-[11px]">{contract.contractSize || '—'}</td>
+            <td colSpan={4} className="px-2 py-1.5 text-right text-slate-500 text-[11px]">
+              Open Interest: <span className="text-slate-300 font-mono font-semibold">{fmt(contract.openInterest)}</span>
+            </td>
+          </tr>
 
-      {/* OI */}
-      <div className="flex items-center gap-2">
-        <span className="text-xs text-slate-600 uppercase tracking-wider">Open Interest</span>
-        <span className="text-xs font-mono text-slate-400">{fmt(contract.openInterest)}</span>
-        <span className="text-xs text-slate-600">· as of {formatDate(contract.reportDate)}</span>
-      </div>
+          {/* Position numbers */}
+          <tr className="border-b border-slate-800/40 hover:bg-slate-800/20">
+            {posRow.map((v, i) => (
+              <td key={i} className="px-2 py-2 text-center font-mono text-slate-200 tabular-nums border-r border-slate-800/30 last:border-r-0">
+                {fmt(v)}
+              </td>
+            ))}
+          </tr>
 
-      {/* Position blocks */}
-      <div className={clsx('grid gap-3', compact ? 'grid-cols-1' : 'grid-cols-3')}>
-        {blocks.map(({ label, labelColor, pos }) => (
-          <PositionBlock
-            key={label}
-            label={label}
-            labelColor={labelColor}
-            pos={pos}
-            openInterest={contract.openInterest}
-            compact={compact}
-          />
-        ))}
-      </div>
+          {/* Changes label */}
+          <tr className="bg-slate-900/30 border-b border-slate-800/40">
+            <td colSpan={5} className="px-2 py-1.5 text-slate-500 text-[11px]">Changes</td>
+            <td colSpan={4} className="px-2 py-1.5 text-right text-slate-500 text-[11px]">
+              Change in Open Interest:{' '}
+              <span className={clsx('font-mono font-semibold', contract.changeOI >= 0 ? 'text-emerald-400' : 'text-red-400')}>
+                {fmtSigned(contract.changeOI)}
+              </span>
+            </td>
+          </tr>
+
+          {/* Change numbers */}
+          <tr className="border-b border-slate-800/40 hover:bg-slate-800/20">
+            {chgRow.map((v, i) => (
+              <td key={i} className="px-2 py-2 text-center border-r border-slate-800/30 last:border-r-0">
+                <ChangeBadge value={v} />
+              </td>
+            ))}
+          </tr>
+
+          {/* Percent of OI label */}
+          <tr className="bg-slate-900/30 border-b border-slate-800/40">
+            <td colSpan={9} className="px-2 py-1.5 text-slate-500 text-[11px]">
+              Percent of Open Interest for Each Category of Traders
+            </td>
+          </tr>
+
+          {/* Pct numbers */}
+          <tr className="border-b border-slate-800/40 hover:bg-slate-800/20">
+            {(pctRow.length ? pctRow : Array(9).fill(0)).map((v, i) => (
+              <td key={i} className="px-2 py-2 text-center font-mono text-slate-400 tabular-nums text-[11px] border-r border-slate-800/30 last:border-r-0">
+                {v.toFixed(1)}%
+              </td>
+            ))}
+          </tr>
+
+          {/* Traders label */}
+          <tr className="bg-slate-900/30 border-b border-slate-800/40">
+            <td colSpan={5} className="px-2 py-1.5 text-slate-500 text-[11px]">Number of Traders in Each Category</td>
+            <td colSpan={4} className="px-2 py-1.5 text-right text-slate-500 text-[11px]">
+              Total Traders: <span className="text-slate-300 font-mono font-semibold">{contract.totalTraders}</span>
+            </td>
+          </tr>
+
+          {/* Trader counts */}
+          <tr className="hover:bg-slate-800/20">
+            {Array(9).fill(0).map((_, i) => (
+              <td key={i} className="px-2 py-2 text-center font-mono text-slate-400 tabular-nums text-[11px] border-r border-slate-800/30 last:border-r-0">
+                {i < 7 && (contract.traderCount[i] ?? 0) > 0 ? (contract.traderCount[i] ?? 0) : '—'}
+              </td>
+            ))}
+          </tr>
+        </tbody>
+      </table>
     </div>
   );
 }
 
-// ---------- Compare panel (with asset selector) ----------
+// ---------- Net Positions + Price Chart ----------
+
+const CHART_COLORS = {
+  nc:   '#3b82f6',  // blue
+  comm: '#64748b',  // slate
+  nr:   '#ef4444',  // red
+  price:'#f59e0b',  // amber
+};
+
+type ChartTooltipProps = {
+  active?: boolean;
+  payload?: { name: string; value: number; color: string }[];
+  label?: string;
+};
+
+function ChartTooltip({ active, payload, label }: ChartTooltipProps) {
+  if (!active || !payload?.length || !label) return null;
+  return (
+    <div className="rounded-md border border-slate-700 bg-[#0d0d0f] px-3 py-2 text-xs shadow-xl min-w-[160px]">
+      <p className="text-slate-400 mb-1.5 font-mono">{label}</p>
+      {payload.map((p) => (
+        <div key={p.name} className="flex items-center justify-between gap-4 mb-0.5">
+          <span style={{ color: p.color }} className="font-medium">{p.name}</span>
+          <span className="font-mono tabular-nums" style={{ color: p.color }}>
+            {p.name === 'Price'
+              ? p.value.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 4 })
+              : fmtSigned(Math.round(p.value))}
+          </span>
+        </div>
+      ))}
+    </div>
+  );
+}
+
+type LineKey = 'nc' | 'comm' | 'nr' | 'price';
+
+function NetChart({ history, compact = false }: { history: COTHistoryPoint[]; compact?: boolean }) {
+  const [span, setSpan] = useState<Span>('1Y');
+  const [hidden, setHidden] = useState<Set<LineKey>>(new Set());
+
+  const cutoff = new Date();
+  cutoff.setMonth(cutoff.getMonth() - SPAN_MONTHS[span]);
+  const cutoffStr = cutoff.toISOString().slice(0, 10);
+  const points = history.filter((p) => span === 'MAX' || p.date >= cutoffStr);
+
+  const hasPrice = points.some((p) => p.close !== undefined);
+
+  const step = Math.max(1, Math.ceil(points.length / 8));
+  const ticks = points.filter((_, i) => i % step === 0).map((p) => p.date);
+
+  const toggleLine = (k: LineKey) =>
+    setHidden((prev) => { const n = new Set(prev); n.has(k) ? n.delete(k) : n.add(k); return n; });
+
+  const LINE_DEFS: { key: LineKey; label: string; color: string }[] = [
+    { key: 'nc',    label: 'Non-Comm',   color: CHART_COLORS.nc   },
+    { key: 'comm',  label: 'Commercial', color: CHART_COLORS.comm },
+    { key: 'nr',    label: 'Non-Rept',   color: CHART_COLORS.nr   },
+    ...(hasPrice ? [{ key: 'price' as LineKey, label: 'Price', color: CHART_COLORS.price }] : []),
+  ];
+
+  if (points.length < 2) return (
+    <div className="h-48 flex items-center justify-center text-slate-600 text-sm">No history data</div>
+  );
+
+  return (
+    <div>
+      {/* Controls row */}
+      <div className="flex items-center justify-between mb-3 flex-wrap gap-2">
+        {/* Toggleable legend */}
+        <div className="flex items-center gap-2 flex-wrap">
+          {LINE_DEFS.map(({ key, label, color }) => (
+            <button
+              key={key}
+              onClick={() => toggleLine(key)}
+              className={clsx(
+                'flex items-center gap-1.5 px-2 py-0.5 rounded text-[11px] font-medium transition-all border',
+                hidden.has(key)
+                  ? 'border-slate-800 text-slate-700 bg-transparent'
+                  : 'border-slate-700/60 bg-slate-800/40',
+              )}
+              style={{ color: hidden.has(key) ? undefined : color }}
+            >
+              <span
+                className="w-2.5 h-2.5 rounded-full shrink-0"
+                style={{ backgroundColor: hidden.has(key) ? '#334155' : color }}
+              />
+              {label}
+            </button>
+          ))}
+        </div>
+        {/* Span selector */}
+        <div className="flex gap-1">
+          {(['1Y','2Y','5Y','MAX'] as Span[]).map((s) => (
+            <button
+              key={s}
+              onClick={() => setSpan(s)}
+              className={clsx(
+                'px-2 py-0.5 rounded text-[11px] font-medium transition-colors',
+                span === s
+                  ? 'bg-amber-500/20 border border-amber-500/40 text-amber-300'
+                  : 'text-slate-600 hover:text-slate-300',
+              )}
+            >
+              {s}
+            </button>
+          ))}
+        </div>
+      </div>
+      <ResponsiveContainer width="100%" height={compact ? 180 : 240}>
+        <ComposedChart data={points} margin={{ top: 4, right: hasPrice && !hidden.has('price') ? 48 : 8, left: -8, bottom: 0 }}>
+          <CartesianGrid strokeDasharray="3 3" stroke="#1e293b" vertical={false} />
+          <XAxis
+            dataKey="date"
+            ticks={ticks}
+            tickFormatter={formatAxisDate}
+            tick={{ fill: '#475569', fontSize: 10 }}
+            axisLine={false}
+            tickLine={false}
+          />
+          <YAxis
+            yAxisId="net"
+            tickFormatter={(v) => fmtK(v)}
+            tick={{ fill: '#475569', fontSize: 10 }}
+            axisLine={false}
+            tickLine={false}
+            width={52}
+          />
+          {hasPrice && !hidden.has('price') && (
+            <YAxis
+              yAxisId="price"
+              orientation="right"
+              tick={{ fill: '#475569', fontSize: 10 }}
+              axisLine={false}
+              tickLine={false}
+              width={44}
+              domain={['auto', 'auto']}
+              tickFormatter={(v) => v >= 1000 ? (v/1000).toFixed(1)+'K' : String(v)}
+            />
+          )}
+          <Tooltip content={<ChartTooltip />} />
+          <ReferenceLine yAxisId="net" y={0} stroke="#334155" strokeDasharray="4 2" />
+          {!hidden.has('nc') && (
+            <Line
+              yAxisId="net" type="stepAfter" dataKey="net"
+              name="Non-Comm" stroke={CHART_COLORS.nc}
+              strokeWidth={1.5} dot={false} activeDot={{ r: 3, strokeWidth: 0 }}
+            />
+          )}
+          {!hidden.has('comm') && (
+            <Line
+              yAxisId="net" type="stepAfter" dataKey="commercial"
+              name="Commercial" stroke={CHART_COLORS.comm}
+              strokeWidth={1.5} dot={false} activeDot={{ r: 3, strokeWidth: 0 }}
+            />
+          )}
+          {!hidden.has('nr') && (
+            <Line
+              yAxisId="net" type="stepAfter" dataKey="nonRept"
+              name="Non-Rept" stroke={CHART_COLORS.nr}
+              strokeWidth={1.5} dot={false} activeDot={{ r: 3, strokeWidth: 0 }}
+            />
+          )}
+          {hasPrice && !hidden.has('price') && (
+            <Line
+              yAxisId="price" type="monotone" dataKey="close"
+              name="Price" stroke={CHART_COLORS.price}
+              strokeWidth={1} dot={false} activeDot={{ r: 3, strokeWidth: 0 }}
+              strokeOpacity={0.8}
+            />
+          )}
+        </ComposedChart>
+      </ResponsiveContainer>
+    </div>
+  );
+}
+
+// ---------- Detail panel ----------
+
+function DetailPanel({ contract, compact = false }: { contract: COTContract; compact?: boolean }) {
+  return (
+    <div className="flex flex-col gap-5">
+      {/* Report header */}
+      <div className="flex items-center justify-between">
+        <div>
+          <h3 className="text-base font-bold text-slate-100">{contract.label}</h3>
+          <p className="text-xs text-slate-500 mt-0.5">
+            {contract.exchange} · Legacy Futures Only · as of {formatDate(contract.reportDate)}
+          </p>
+        </div>
+        <div className="text-right">
+          <p className="text-[10px] text-slate-600 uppercase tracking-wider">NC Net</p>
+          <p className={clsx('text-sm font-mono font-bold', contract.nonCommercial.net >= 0 ? 'text-emerald-400' : 'text-red-400')}>
+            {fmtSigned(contract.nonCommercial.net)}
+          </p>
+        </div>
+      </div>
+
+      {/* Full table */}
+      <COTTable contract={contract} />
+
+      {/* Chart */}
+      {contract.history.length >= 2 && (
+        <div className="pt-1">
+          <p className="text-xs font-semibold text-slate-400 mb-3">Prices &amp; Net Positions</p>
+          <NetChart history={contract.history} compact={compact} />
+        </div>
+      )}
+    </div>
+  );
+}
+
+// ---------- Compare panel ----------
 
 function ComparePanel({
   contracts,
@@ -308,37 +401,35 @@ function ComparePanel({
 }) {
   const contract = contracts.find((c) => c.key === selectedKey) ?? contracts[0];
 
+  const grouped = CATEGORIES.map((cat) => ({
+    cat,
+    items: contracts.filter((c) => c.category === cat),
+  })).filter((g) => g.items.length > 0);
+
   return (
     <div className={clsx(
-      'flex-1 flex flex-col gap-4 px-5 py-4 overflow-y-auto',
-      side === 'left' ? 'border-r border-slate-800/60' : '',
+      'flex-1 flex flex-col gap-4 px-4 sm:px-5 py-4 overflow-y-auto',
+      side === 'left' ? 'border-b md:border-b-0 md:border-r border-slate-800/60' : '',
     )}>
-      {/* Asset selector */}
       <select
         value={selectedKey}
         onChange={(e) => onSelect(e.target.value)}
         className="w-full bg-[#0d0d0f] border border-slate-700/60 rounded-lg px-3 py-2 text-sm text-slate-200 font-semibold focus:outline-none focus:border-amber-500/50 cursor-pointer"
       >
-        <optgroup label="Currencies">
-          {contracts.filter((c) => c.category === 'currency').map((c) => (
-            <option key={c.key} value={c.key}>{c.label} ({c.exchange})</option>
-          ))}
-        </optgroup>
-        <optgroup label="Commodities">
-          {contracts.filter((c) => c.category === 'commodity').map((c) => (
-            <option key={c.key} value={c.key}>{c.label} ({c.exchange})</option>
-          ))}
-        </optgroup>
+        {grouped.map(({ cat, items }) => (
+          <optgroup key={cat} label={CAT_LABELS[cat]}>
+            {items.map((c) => (
+              <option key={c.key} value={c.key}>{c.label} ({c.exchange})</option>
+            ))}
+          </optgroup>
+        ))}
       </select>
-
       {contract && <DetailPanel contract={contract} compact />}
     </div>
   );
 }
 
-// ---------- Asset list sidebar ----------
-
-type Tab = 'currency' | 'commodity';
+// ---------- Asset list sidebar (accordion dropdowns) ----------
 
 function AssetList({
   contracts,
@@ -349,63 +440,112 @@ function AssetList({
   activeKey: string;
   onSelect: (key: string) => void;
 }) {
-  const [tab, setTab] = useState<Tab>('currency');
-  const filtered = contracts.filter((c) => c.category === tab);
+  const [open, setOpen] = useState<Set<Category>>(() => {
+    try {
+      const saved = localStorage.getItem('cot_cat_open');
+      if (saved) return new Set(JSON.parse(saved) as Category[]);
+    } catch {}
+    return new Set(CATEGORIES);
+  });
+
+  const toggle = (cat: Category) =>
+    setOpen((prev) => {
+      const next = new Set(prev);
+      next.has(cat) ? next.delete(cat) : next.add(cat);
+      try { localStorage.setItem('cot_cat_open', JSON.stringify(Array.from(next))); } catch {}
+      return next;
+    });
+
+  const groups = CATEGORIES.map((cat) => ({
+    cat,
+    items: contracts.filter((c) => c.category === cat),
+  })).filter((g) => g.items.length > 0);
+
+  const renderItem = (c: COTContract) => {
+    const net = c.nonCommercial.net;
+    const isActive = c.key === activeKey;
+    return (
+      <button
+        key={c.key}
+        onClick={() => onSelect(c.key)}
+        className={clsx(
+          'w-full text-left pl-4 pr-3 py-2 transition-colors flex items-center justify-between gap-2',
+          isActive
+            ? 'bg-amber-500/15 border-r-2 border-amber-500 text-amber-200'
+            : 'text-slate-400 hover:bg-slate-800/40 hover:text-slate-200',
+        )}
+      >
+        <span className="text-xs font-medium truncate">{c.label}</span>
+        <span className={clsx('text-[11px] font-mono shrink-0', net >= 0 ? 'text-emerald-500' : 'text-red-500')}>
+          {fmtK(net)}
+        </span>
+      </button>
+    );
+  };
+
+  const sidebar = (
+    <div className="flex-1 overflow-y-auto">
+      {groups.map(({ cat, items }) => (
+        <div key={cat}>
+          {/* Category header / toggle */}
+          <button
+            onClick={() => toggle(cat)}
+            className="w-full flex items-center justify-between px-3 py-2 text-[11px] font-semibold uppercase tracking-wider text-slate-500 hover:text-slate-300 hover:bg-slate-800/30 transition-colors border-b border-slate-800/40"
+          >
+            <span>{CAT_LABELS[cat]}</span>
+            <span className="text-slate-700 text-[10px]">{open.has(cat) ? '▲' : '▼'}</span>
+          </button>
+          {/* Items */}
+          {open.has(cat) && (
+            <div className="border-b border-slate-800/20">
+              {items.map(renderItem)}
+            </div>
+          )}
+        </div>
+      ))}
+    </div>
+  );
 
   return (
-    <div className="w-48 shrink-0 flex flex-col border-r border-slate-800/60 bg-[#0d0d0f]/40">
-      {/* Tabs */}
-      <div className="flex border-b border-slate-800/60 px-2 pt-2 gap-1">
-        {(['currency', 'commodity'] as Tab[]).map((t) => (
-          <button
-            key={t}
-            onClick={() => setTab(t)}
-            className={clsx(
-              'flex-1 pb-2 text-xs font-medium transition-colors rounded-t',
-              tab === t ? 'text-amber-300 border-b-2 border-amber-500' : 'text-slate-600 hover:text-slate-400',
-            )}
-          >
-            {t === 'currency' ? 'FX' : 'Commod'}
-          </button>
-        ))}
+    <>
+      {/* Mobile: compact horizontal strip (same as before) */}
+      <div className="md:hidden flex flex-col border-b border-slate-800/60 bg-[#0d0d0f]/40 shrink-0">
+        <div className="flex overflow-x-auto gap-1.5 px-3 py-2.5 scrollbar-none">
+          {contracts.map((c) => {
+            const net = c.nonCommercial.net;
+            const isActive = c.key === activeKey;
+            return (
+              <button
+                key={c.key}
+                onClick={() => onSelect(c.key)}
+                className={clsx(
+                  'flex-shrink-0 flex items-center gap-1.5 px-2.5 py-1.5 rounded-full border text-xs font-medium transition-colors whitespace-nowrap',
+                  isActive
+                    ? 'bg-amber-500/20 border-amber-500/40 text-amber-300'
+                    : 'bg-slate-800/40 border-slate-700/60 text-slate-400 hover:text-slate-200',
+                )}
+              >
+                <span>{c.label}</span>
+                <span className={clsx('font-mono text-[10px]', net >= 0 ? 'text-emerald-400' : 'text-red-400')}>
+                  {fmtK(net)}
+                </span>
+              </button>
+            );
+          })}
+        </div>
       </div>
 
-      {/* List */}
-      <div className="flex-1 overflow-y-auto py-1">
-        {filtered.map((c) => {
-          const net = c.nonCommercial.net;
-          const isActive = c.key === activeKey;
-          return (
-            <button
-              key={c.key}
-              onClick={() => onSelect(c.key)}
-              className={clsx(
-                'w-full text-left px-3 py-2.5 transition-colors flex items-center justify-between gap-2',
-                isActive
-                  ? 'bg-amber-500/15 border-r-2 border-amber-500 text-amber-200'
-                  : 'text-slate-400 hover:bg-slate-800/40 hover:text-slate-200',
-              )}
-            >
-              <span className="text-sm font-medium truncate">{c.label}</span>
-              <span className={clsx(
-                'text-xs font-mono shrink-0',
-                net >= 0 ? 'text-emerald-500' : 'text-red-500',
-              )}>
-                {net >= 0 ? '+' : ''}{Math.round(net / 1000)}K
-              </span>
-            </button>
-          );
-        })}
+      {/* Desktop: vertical accordion sidebar */}
+      <div className="hidden md:flex w-48 shrink-0 flex-col border-r border-slate-800/60 bg-[#0d0d0f]/40">
+        {sidebar}
       </div>
-    </div>
+    </>
   );
 }
 
-// ---------- Client-side cache — two layers ----------
-// Module-level: survives navigation within the same browser tab (instant)
-// localStorage: survives page refresh / browser restart (stale after 7 days)
+// ---------- localStorage cache ----------
 
-const LS_KEY = 'cot_v3';
+const LS_KEY = 'cot_v4';
 const LS_MAX_AGE = 7 * 24 * 60 * 60 * 1000;
 
 function lsRead(): COTResponse | null {
@@ -425,7 +565,7 @@ function lsClear(): void {
   try { localStorage.removeItem(LS_KEY); } catch {}
 }
 
-let _mem: COTResponse | null = null; // module-level, cleared on page reload
+let _mem: COTResponse | null = null;
 
 // ---------- Main section ----------
 
@@ -439,16 +579,13 @@ export default function COTSection() {
   const [compareB, setCompareB]     = useState('jpy');
 
   const fetchData = useCallback(async (force = false) => {
-    // 1. Module cache — instant, same tab navigation
     if (!force && _mem) { setData(_mem); setLoading(false); return; }
 
-    // 2. localStorage — instant, survives page refresh
     if (!force) {
       const ls = lsRead();
       if (ls) { _mem = ls; setData(ls); setLoading(false); return; }
     }
 
-    // 3. Server fetch
     if (force) { lsClear(); setRefreshing(true); }
     else setLoading(true);
 
@@ -482,7 +619,7 @@ export default function COTSection() {
       <div className="flex items-center justify-between px-5 py-4 border-b border-slate-800/60 bg-[#0d0d0f] shrink-0">
         <div>
           <h2 className="text-sm font-semibold text-slate-100 tracking-wide">Commitment of Traders</h2>
-          <p className="text-xs text-slate-600 mt-0.5">CFTC · Legacy Futures Only · Weekly</p>
+          <p className="text-xs text-slate-600 mt-0.5">CFTC · Legacy Futures Only · {contracts.length} contracts</p>
         </div>
         <div className="flex items-center gap-2">
           {data && (
@@ -498,8 +635,6 @@ export default function COTSection() {
               </span>
             </div>
           )}
-
-          {/* Compare toggle */}
           <button
             onClick={() => setMode(mode === 'compare' ? 'single' : 'compare')}
             className={clsx(
@@ -512,11 +647,10 @@ export default function COTSection() {
             {mode === 'compare' ? <X className="w-3.5 h-3.5" /> : <Columns2 className="w-3.5 h-3.5" />}
             <span>{mode === 'compare' ? 'Exit compare' : 'Compare'}</span>
           </button>
-
           <button
             onClick={() => fetchData(true)}
             disabled={loading || refreshing}
-            title="Force refresh from CFTC"
+            title="Force refresh from Tradingster"
             className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-slate-800/60 border border-slate-700/60 text-xs text-slate-400 hover:bg-amber-500/10 hover:text-amber-300 hover:border-amber-500/30 transition-colors disabled:opacity-40"
           >
             <RefreshCw className={clsx('w-3.5 h-3.5', refreshing && 'animate-spin')} />
@@ -535,35 +669,19 @@ export default function COTSection() {
       {/* Body */}
       {loading ? (
         <div className="flex-1 flex items-center justify-center text-slate-600 text-sm">
-          Loading CFTC data — this may take 20–40s on first load…
+          Loading COT data — fetching {contracts.length || 28} contracts from Tradingster…
         </div>
       ) : contracts.length === 0 ? (
-        <div className="flex-1 flex items-center justify-center text-slate-600 text-sm">
-          No COT data available.
-        </div>
+        <div className="flex-1 flex items-center justify-center text-slate-600 text-sm">No COT data available.</div>
       ) : mode === 'single' ? (
-        <div className="flex flex-1 overflow-hidden">
-          {/* Sidebar */}
+        <div className="flex flex-col md:flex-row flex-1 overflow-hidden">
           <AssetList contracts={contracts} activeKey={activeKey} onSelect={setActiveKey} />
-
-          {/* Detail */}
-          <div className="flex-1 px-6 py-5 overflow-y-auto">
-            {activeContract && (
-              <>
-                <div className="flex items-baseline gap-3 mb-5">
-                  <h3 className="text-xl font-bold text-slate-100">{activeContract.label}</h3>
-                  <span className="text-xs px-1.5 py-0.5 rounded border border-slate-700/60 text-slate-500 font-mono">
-                    {activeContract.exchange}
-                  </span>
-                </div>
-                <DetailPanel contract={activeContract} sparklineHeight={200} />
-              </>
-            )}
+          <div className="flex-1 px-4 sm:px-6 py-5 overflow-y-auto">
+            {activeContract && <DetailPanel contract={activeContract} />}
           </div>
         </div>
       ) : (
-        /* Compare mode */
-        <div className="flex flex-1 overflow-hidden">
+        <div className="flex flex-col md:flex-row flex-1 overflow-hidden overflow-y-auto md:overflow-hidden">
           <ComparePanel contracts={contracts} selectedKey={compareA} onSelect={setCompareA} side="left" />
           <ComparePanel contracts={contracts} selectedKey={compareB} onSelect={setCompareB} side="right" />
         </div>
@@ -571,8 +689,11 @@ export default function COTSection() {
 
       {/* Footer */}
       {!loading && contracts.length > 0 && (
-        <div className="px-5 py-3 border-t border-slate-800/60 text-xs text-slate-700 shrink-0">
-          CFTC · Positions as of Tuesday each week, released Friday · {contracts.length} contracts
+        <div className="px-5 py-3 border-t border-slate-800/60 text-xs text-slate-700 shrink-0 flex items-center justify-between">
+          <span>CFTC · Positions as of Tuesday each week, released Friday</span>
+          <span className="font-mono">
+            {data && new Date(data.fetchedAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}
+          </span>
         </div>
       )}
     </div>

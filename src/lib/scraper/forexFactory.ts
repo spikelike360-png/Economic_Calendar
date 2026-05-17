@@ -302,6 +302,13 @@ function mergeActuals(events: CalendarEvent[], actualsMap: Map<string, string>):
   });
 }
 
+// ---------- helpers (absolute date) ----------
+
+function ffWeekParamFromDate(date: Date): string {
+  const monday = startOfWeek(date, { weekStartsOn: 1 });
+  return format(monday, 'MMMd.yyyy').toLowerCase();
+}
+
 // ---------- public ----------
 
 function dedup(events: CalendarEvent[]): CalendarEvent[] {
@@ -317,6 +324,32 @@ export interface FetchResult {
   events: CalendarEvent[];
   source: 'json' | 'html' | 'mixed' | 'error';
   warnings: string[];
+}
+
+export async function fetchHistoricalWeek(dateStr: string): Promise<FetchResult> {
+  const date = new Date(dateStr + 'T12:00:00Z');
+  const weekParam = ffWeekParamFromDate(date);
+  const html = await fetchFFHtmlViaCurl(weekParam);
+  if (!html) {
+    return { events: [], source: 'error', warnings: [`curl failed for week ${weekParam}`] };
+  }
+  const parsed = parseFFHtml(html);
+  const events: CalendarEvent[] = dedup(
+    parsed.map((item) => ({
+      id: makeId(item.date, item.time, item.currency, item.title),
+      date: item.date,
+      time: item.time,
+      timestamp: item.timestamp,
+      currency: item.currency,
+      impact: item.impact,
+      title: item.title,
+      actual: item.actual,
+      forecast: item.forecast,
+      previous: item.previous,
+      isReleased: !!item.actual,
+    })),
+  ).sort((a, b) => a.timestamp - b.timestamp || a.title.localeCompare(b.title));
+  return { events, source: 'html', warnings: [] };
 }
 
 export async function fetchCalendarData(): Promise<FetchResult> {
@@ -345,8 +378,8 @@ export async function fetchCalendarData(): Promise<FetchResult> {
   }
 
   // Step 2: FF HTML via curl — for actuals + additional weeks
-  // Fetch last week, this week, next week, and 2 weeks ahead
-  const htmlWeeks = [ffWeekParam(-1), 'this', ffWeekParam(1), ffWeekParam(2)];
+  // Fetch 3 weeks back through 2 weeks ahead for historical coverage
+  const htmlWeeks = [ffWeekParam(-3), ffWeekParam(-2), ffWeekParam(-1), 'this', ffWeekParam(1), ffWeekParam(2)];
   const htmlResults = await Promise.allSettled(
     htmlWeeks.map((w) => fetchFFHtmlViaCurl(w)),
   );

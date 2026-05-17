@@ -1,6 +1,7 @@
-import { NextResponse } from 'next/server';
-import { fetchCalendarData } from '@/lib/scraper/forexFactory';
+import { NextRequest, NextResponse } from 'next/server';
+import { fetchCalendarData, fetchHistoricalWeek } from '@/lib/scraper/forexFactory';
 import { memCache } from '@/lib/scraper/cache';
+import { writeCalendarDiskCache } from '@/lib/scraper/calendarDiskCache';
 import type { CalendarResponse } from '@/lib/types';
 
 const CACHE_KEY = 'calendar';
@@ -8,7 +9,29 @@ const CACHE_TTL = 14 * 60 * 1000; // 14 min — slightly under Next.js 15-min re
 
 export const revalidate = 300; // Vercel CDN cache — revalidates every 5 min
 
-export async function GET() {
+export async function GET(req: NextRequest) {
+  const week = req.nextUrl.searchParams.get('week'); // YYYY-MM-DD in the target week
+
+  if (week) {
+    try {
+      const result = await fetchHistoricalWeek(week);
+      return NextResponse.json(
+        {
+          events: result.events,
+          fetchedAt: new Date().toISOString(),
+          isStale: false,
+          source: result.source,
+        } satisfies CalendarResponse,
+        { headers: { 'Cache-Control': 'public, s-maxage=86400, stale-while-revalidate=604800' } },
+      );
+    } catch {
+      return NextResponse.json(
+        { events: [], fetchedAt: new Date().toISOString(), isStale: true, source: 'error' as const, error: 'Failed to fetch historical week.' } satisfies CalendarResponse,
+        { status: 503 },
+      );
+    }
+  }
+
   const cached = memCache.get<CalendarResponse>(CACHE_KEY);
 
   if (cached && !cached.isStale) {
@@ -30,6 +53,7 @@ export async function GET() {
     };
 
     memCache.set(CACHE_KEY, response, CACHE_TTL);
+    writeCalendarDiskCache(events);
     return NextResponse.json(response, {
       headers: { 'Cache-Control': 'public, s-maxage=300, stale-while-revalidate=86400' },
     });

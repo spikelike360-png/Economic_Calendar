@@ -1,30 +1,33 @@
 import fs from 'fs';
+import os from 'os';
 import path from 'path';
 import type { COTResponse } from '@/lib/types';
 
-// Writable on both local dev and Vercel (/tmp is always available)
-const CACHE_PATH = path.join('/tmp', 'cot_cache.json');
+const CACHE_PATH = path.join(os.tmpdir(), 'cot_cache_v4.json');
 
-// COT releases: every Friday ~3:30 PM ET (20:30 UTC)
-// Returns ms until next expected release
+// US Eastern DST: second Sunday in March → first Sunday in November
+function isEDT(date: Date): boolean {
+  const y = date.getUTCFullYear();
+  const mar1Day = new Date(Date.UTC(y, 2, 1)).getUTCDay();
+  const dstStart = new Date(Date.UTC(y, 2, (7 - mar1Day) % 7 + 8, 7, 0)); // 2 AM ET = 07:00 UTC
+  const nov1Day  = new Date(Date.UTC(y, 10, 1)).getUTCDay();
+  const dstEnd   = new Date(Date.UTC(y, 10, (7 - nov1Day) % 7 + 1, 6, 0)); // 2 AM EDT = 06:00 UTC
+  return date >= dstStart && date < dstEnd;
+}
+
+// COT releases: every Friday 3:30 PM ET (19:30 UTC during EDT, 20:30 UTC during EST)
 function msUntilNextRelease(): number {
   const now = new Date();
-  const etOffset = -5 * 60; // ET = UTC-5 (EST). DST off for simplicity; adds ~1h buffer at worst
-  const etNow = new Date(now.getTime() + etOffset * 60_000);
-
-  // Find next Friday 20:30 UTC
+  const daysUntilFriday = (5 - now.getUTCDay() + 7) % 7;
   const target = new Date(now);
-  const dayOfWeek = target.getUTCDay(); // 0=Sun, 5=Fri
-  const daysUntilFriday = (5 - dayOfWeek + 7) % 7;
   target.setUTCDate(target.getUTCDate() + daysUntilFriday);
-  target.setUTCHours(20, 30, 0, 0);
+  target.setUTCHours(isEDT(target) ? 19 : 20, 30, 0, 0);
 
-  // If we're past Friday's release, next release is next Friday
   if (target.getTime() <= now.getTime()) {
     target.setUTCDate(target.getUTCDate() + 7);
+    target.setUTCHours(isEDT(target) ? 19 : 20, 30, 0, 0);
   }
 
-  void etNow; // suppress unused warning
   return target.getTime() - now.getTime();
 }
 

@@ -45,12 +45,12 @@ const SERIES: Record<Currency, {
   },
   EUR: {
     rate: { id: 'ECBDFR',             label: 'ECB Deposit Rate' },
-    cpi:  { id: 'CP0000EZ19M086NEST', label: 'Eurostat HICP',         units: 'pc1' },
+    cpi:  { id: 'DEUCPIALLMINMEI',    label: 'Destatis CPI',           units: 'pc1' },
     unem: {
-      id: 'LRHUTTTTEZM156S', label: 'Eurostat', alreadyPct: true, maxAgeDays: 365,
-      wbFallback: { country: 'XC', indicator: 'SL.UEM.TOTL.ZS', label: 'World Bank / Eurostat' },
+      id: 'LRHUTTTTDEM156S', label: 'Destatis', alreadyPct: true, maxAgeDays: 365,
+      wbFallback: { country: 'DE', indicator: 'SL.UEM.TOTL.ZS', label: 'World Bank / Destatis' },
     },
-    gdp:  { id: 'CLVMEURSCAB1GQEA19', label: 'Eurostat',              units: 'pca', quarterly: true },
+    gdp:  { id: 'NAEXKP01DEQ657S',    label: 'Destatis',               alreadyPct: true, quarterly: true },
   },
   GBP: {
     rate: { id: 'IRSTCI01GBM156N',    label: 'Overnight Rate (SONIA)' },
@@ -119,13 +119,22 @@ async function fetchFredObs(seriesId: string, apiKey: string, units?: string): P
       ...(units ? { units } : {}),
     });
     const res = await fetch(`${FRED_BASE}?${params}`, { signal: AbortSignal.timeout(7_000) });
-    if (!res.ok) return null;
+    if (!res.ok) {
+      let body = '';
+      try { body = await res.text(); } catch { /* ignore */ }
+      console.warn(`[metrics] FRED ${seriesId}: HTTP ${res.status} — ${body.slice(0, 200)}`);
+      return null;
+    }
     const json = await res.json();
     const obs: FredObs[] = (json.observations ?? []).filter(
       (o: FredObs) => o.value !== '.' && o.value !== '',
     );
+    if (obs.length > 0) {
+      console.log(`[metrics] FRED ${seriesId}: ok, latest=${obs[0].date}`);
+    }
     return obs.length > 0 ? obs : null;
-  } catch {
+  } catch (err) {
+    console.warn(`[metrics] FRED ${seriesId}: failed —`, err instanceof Error ? err.message : String(err));
     return null;
   }
 }
@@ -192,6 +201,7 @@ async function buildMetric(
   }
 
   // 3. Static fallback
+  console.warn(`[metrics] ${cfg.id}: using static fallback (lastUpdated=${fallback.lastUpdated})`);
   return fallback;
 }
 

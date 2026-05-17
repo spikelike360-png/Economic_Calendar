@@ -54,6 +54,7 @@ export interface CalendarFilters {
   currencies: Currency[];
   impacts: Impact[];
   dateFilter: DateFilter;
+  selectedDate?: string; // YYYY-MM-DD — when set, overrides dateFilter to show that week
 }
 
 export interface MetricsResponse {
@@ -77,26 +78,188 @@ export interface COTPosition {
 
 export interface COTHistoryPoint {
   date: string;
-  net: number;
+  net: number;         // NonCommercial net
+  commercial?: number;
+  nonRept?: number;
+  close?: number;      // FX/asset close price
 }
 
 export interface COTContract {
   key: string;
   label: string;
   exchange: string;
-  category: 'currency' | 'commodity';
+  category: 'fx' | 'index' | 'rates' | 'energy' | 'metals' | 'ag' | 'crypto';
   reportDate: string;
   openInterest: number;
+  changeOI: number;
+  contractSize: string;
   nonCommercial: COTPosition;
   commercial: COTPosition;
+  total: { long: number; short: number; changeLong: number; changeShort: number };
   nonReportable: COTPosition;
+  pctOI: number[];      // 9 values: ncL, ncS, ncSpread, commL, commS, totL, totS, nrL, nrS
+  traderCount: number[]; // 7 values: ncL, ncS, ncSpread, commL, commS, totL, totS
+  totalTraders: number;
   history: COTHistoryPoint[];
+}
+
+export interface SeasonalityMonth {
+  month: number;
+  avgReturn: number;
+  positiveYears: number;
+  totalYears: number;
+}
+
+export interface CurrencySeasonality {
+  currency: Currency;
+  monthly: SeasonalityMonth[];
+  yearsOfData: number;
+}
+
+export interface SeasonalityResponse {
+  data: CurrencySeasonality[];
+  fetchedAt: string;
+  source: string;
+  error?: string;
+}
+
+export interface EarningsEvent {
+  symbol: string;
+  name: string;
+  date: string;           // "YYYY-MM-DD"
+  time: 'pre-market' | 'after-hours' | 'unknown';
+  fiscalQuarter: string;  // "Mar 2026"
+  epsEstimate: string | null;
+  epsActual: string | null;
+  lastYearEPS: string | null;
+  marketCap: string | null;
+  marketCapValue: number; // parsed, for sorting
+  exchange: 'NYSE' | 'NASDAQ' | 'OTHER';
+  revenueActual: string | null;
+  revenueEstimate: string | null;
+}
+
+export interface EarningsResponse {
+  events: EarningsEvent[];
+  fetchedAt: string;
+  error?: string;
 }
 
 export interface COTResponse {
   contracts: COTContract[];
   fetchedAt: string;
   isStale: boolean;
-  source: 'cftc' | 'cache' | 'error';
+  source: 'tradingster' | 'cache' | 'error';
+  error?: string;
+}
+
+export interface VIXTermStructure {
+  date: string;
+  vix9d: number | null;
+  vix: number | null;
+  vix3m: number | null;
+  vix6m: number | null;
+  vvix: number | null;
+}
+
+export interface VIXHistoryPoint {
+  date: string;
+  close: number;
+}
+
+export interface UnusualOption {
+  symbol: string;
+  strike: number;
+  type: 'call' | 'put';
+  expiry: string;
+  volume: number;
+  openInterest: number;
+  ratio: number;
+  iv: number;
+}
+
+export interface OptionsChainSummary {
+  symbol: string;
+  price: number;
+  expiryDate: string;
+  callsVolume: number;
+  putsVolume: number;
+  callsOI: number;
+  putsOI: number;
+  pcVolume: number;
+  pcOI: number;
+  unusual: UnusualOption[];
+}
+
+export interface GEXStrike {
+  strike: number;
+  callGEX: number;   // dollar GEX from calls (positive)
+  putGEX: number;    // dollar GEX from puts (negative)
+  netGEX: number;
+}
+
+export interface GEXData {
+  symbol: string;
+  spot: number;
+  netGEX: number;           // total dollar GEX across all strikes
+  maxGEXStrike: number;     // strike with highest positive netGEX
+  gammaFlip: number | null; // strike where netGEX crosses zero near spot
+  strikes: GEXStrike[];     // filtered to ±10% of spot, sorted by strike
+}
+
+export interface GexbotMajors {
+  timestamp: number;
+  ticker: string;
+  spot: number;
+  mpos_vol: number;
+  mpos_oi: number;
+  mneg_vol: number;
+  mneg_oi: number;
+  zero_gamma: number;
+  net_gex_vol: number;
+  net_gex_oi: number;
+}
+
+export interface GexbotInstrument {
+  ticker: string;
+  majors: GexbotMajors | null;
+  breakoutProb: number;
+  regime: 'positive' | 'negative';
+  distToFlipPts: number;
+  aboveFlip: boolean;
+}
+
+export interface GexbotStockRow {
+  ticker: string;
+  name: string;
+  ndxWeight: number;       // % weight in NDX
+  majors: GexbotMajors | null;
+  breakoutProb: number;
+  regime: 'positive' | 'negative';
+  distToFlipPts: number;
+  aboveFlip: boolean;
+}
+
+export interface GexbotAggregateScore {
+  weightedScore: number;   // -1 (all NEG GEX) → +1 (all POS GEX)
+  negCount: number;
+  posCount: number;
+  dataCount: number;
+}
+
+export interface GexbotResponse {
+  instruments: GexbotInstrument[];
+  stocks: GexbotStockRow[];
+  aggregate: GexbotAggregateScore;
+  fetchedAt: string;
+  error?: string;
+}
+
+export interface OptionsFlowResponse {
+  vix: VIXTermStructure | null;
+  vixHistory: VIXHistoryPoint[];
+  chains: OptionsChainSummary[];
+  gex: GEXData[];
+  fetchedAt: string;
   error?: string;
 }

@@ -11,31 +11,44 @@ html {
 }
 
 body {
-  background-color: #09090b;
-  color: #e2e8f0;
-  -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
+  background-color: #000000;
+  color: #cbd5e1;
+  /* Crisp rendering — terminal style */
+  -webkit-font-smoothing: none;
+  -moz-osx-font-smoothing: auto;
+  text-rendering: optimizeSpeed;
 }
 
-/* Custom scrollbar */
+/* Bloomberg-style: tighter letter-spacing for mono */
+*, *::before, *::after {
+  letter-spacing: -0.01em;
+}
+
+/* Bloomberg-style: no rounded corners on cards */
+.rounded-lg    { border-radius: 2px !important; }
+.rounded-xl    { border-radius: 2px !important; }
+.rounded-md    { border-radius: 2px !important; }
+.rounded-full  { border-radius: 2px !important; }
+
+/* Custom scrollbar — terminal style */
 ::-webkit-scrollbar {
-  width: 5px;
-  height: 5px;
+  width: 4px;
+  height: 4px;
 }
 ::-webkit-scrollbar-track {
-  background: #09090b;
+  background: #000;
 }
 ::-webkit-scrollbar-thumb {
-  background: #27272a;
-  border-radius: 2px;
+  background: #2a2a2a;
+  border-radius: 0;
 }
 ::-webkit-scrollbar-thumb:hover {
-  background: #3f3f46;
+  background: #f5a623;
 }
 
 /* Selection */
 ::selection {
-  background: rgba(245, 158, 11, 0.2);
+  background: rgba(245, 158, 11, 0.3);
   color: #fef3c7;
 }
 
@@ -44,13 +57,13 @@ table {
   border-collapse: collapse;
 }
 
-/* Smooth color transitions on interactive elements */
+/* Interactive element transitions */
 button,
 input,
 textarea {
   transition-property: color, background-color, border-color, opacity;
-  transition-duration: 150ms;
-  transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
+  transition-duration: 100ms;
+  transition-timing-function: linear;
 }
 
 /* COT sparkline draw animation */
@@ -61,13 +74,219 @@ textarea {
 .cot-line {
   stroke-dasharray: 1;
   stroke-dashoffset: 1;
-  animation: cot-draw 1.2s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+  animation: cot-draw 0.8s linear forwards;
+}
+
+/* Hide scrollbar but keep scrollable */
+.scrollbar-none {
+  scrollbar-width: none;
+}
+.scrollbar-none::-webkit-scrollbar {
+  display: none;
 }
 
 /* Focus ring */
 button:focus-visible,
 input:focus-visible,
 textarea:focus-visible {
-  outline: 2px solid rgba(245, 158, 11, 0.4);
-  outline-offset: 2px;
+  outline: 1px solid rgba(245, 158, 11, 0.6);
+  outline-offset: 1px;
+}
+
+/* ================================================
+   CSS custom property theme system
+   ================================================ */
+
+/* Default (bloomberg) — amber */
+:root {
+  --th-rgb:      245 158 11;
+  --th-bright:   #fcd34d;
+  --th-main:     #fbbf24;
+  --th-mid:      #f59e0b;
+  --th-dim:      #92400e;
+  --th-dark-rgb: 120 53 15;
+  --th-panel:    rgba(245, 158, 11, 0.05);
+  --th-bg:       rgba(245, 158, 11, 0.12);
+  --th-border:   rgb(120 53 15 / 0.35);
+}
+
+[data-theme="matrix"] {
+  --th-rgb:      74 222 128;
+  --th-bright:   #86efac;
+  --th-main:     #4ade80;
+  --th-mid:      #22c55e;
+  --th-dim:      #166534;
+  --th-dark-rgb: 20 83 45;
+  --th-panel:    rgba(74, 222, 128, 0.05);
+  --th-bg:       rgba(74, 222, 128, 0.12);
+  --th-border:   rgb(20 83 45 / 0.5);
+}
+
+[data-theme="cobalt"] {
+  --th-rgb:      96 165 250;
+  --th-bright:   #93c5fd;
+  --th-main:     #60a5fa;
+  --th-mid:      #3b82f6;
+  --th-dim:      #1e3a8a;
+  --th-dark-rgb: 30 58 138;
+  --th-panel:    rgba(96, 165, 250, 0.05);
+  --th-bg:       rgba(96, 165, 250, 0.12);
+  --th-border:   rgb(30 58 138 / 0.5);
+}
+
+[data-theme="crimson"] {
+  --th-rgb:      248 113 113;
+  --th-bright:   #fca5a5;
+  --th-main:     #f87171;
+  --th-mid:      #ef4444;
+  --th-dim:      #7f1d1d;
+  --th-dark-rgb: 127 29 29;
+  --th-panel:    rgba(248, 113, 113, 0.05);
+  --th-bg:       rgba(248, 113, 113, 0.12);
+  --th-border:   rgb(127 29 29 / 0.5);
+}
+
+[data-theme="violet"] {
+  --th-rgb:      192 132 252;
+  --th-bright:   #d8b4fe;
+  --th-main:     #c084fc;
+  --th-mid:      #a855f7;
+  --th-dim:      #581c87;
+  --th-dark-rgb: 88 28 135;
+  --th-panel:    rgba(192, 132, 252, 0.05);
+  --th-bg:       rgba(192, 132, 252, 0.12);
+  --th-border:   rgb(88 28 135 / 0.5);
+}
+
+[data-theme="cyan"] {
+  --th-rgb:      34 211 238;
+  --th-bright:   #67e8f9;
+  --th-main:     #22d3ee;
+  --th-mid:      #06b6d4;
+  --th-dim:      #164e63;
+  --th-dark-rgb: 22 78 99;
+  --th-panel:    rgba(34, 211, 238, 0.05);
+  --th-bg:       rgba(34, 211, 238, 0.12);
+  --th-border:   rgb(22 78 99 / 0.5);
+}
+
+[data-theme="mono"] {
+  --th-rgb:      148 163 184;
+  --th-bright:   #e2e8f0;
+  --th-main:     #94a3b8;
+  --th-mid:      #64748b;
+  --th-dim:      #1e293b;
+  --th-dark-rgb: 30 41 59;
+  --th-panel:    rgba(148, 163, 184, 0.05);
+  --th-bg:       rgba(148, 163, 184, 0.12);
+  --th-border:   rgb(30 41 59 / 0.7);
+}
+
+/* ================================================
+   Theme-aware overrides for hardcoded Tailwind values
+   ================================================ */
+
+/* Card / panel backgrounds → true black */
+.bg-\[\#111113\],
+.bg-\[\#0d0d0f\],
+.bg-\[\#09090b\] {
+  background-color: #050505 !important;
+}
+
+.bg-\[\#0d0d0f\]\/95,
+.bg-\[\#09090b\]\/95 {
+  background-color: rgba(0, 0, 0, 0.95) !important;
+}
+
+/* Slate borders → theme tint */
+.border-slate-800,
+.border-slate-800\/60,
+.border-slate-800\/40,
+.border-slate-800\/20 {
+  border-color: var(--th-border) !important;
+}
+
+/* Card headings */
+h2.text-slate-100,
+h3.text-slate-100 {
+  color: var(--th-main) !important;
+}
+
+/* Hover states on dark bg panels */
+.hover\:bg-slate-800\/40:hover,
+.hover\:bg-slate-800\/30:hover {
+  background-color: var(--th-panel) !important;
+}
+
+/* ---- Amber Tailwind class overrides → CSS vars ---- */
+.text-amber-100 { color: color-mix(in srgb, rgb(var(--th-rgb)) 20%, white) !important; }
+.text-amber-200 { color: color-mix(in srgb, rgb(var(--th-rgb)) 40%, white) !important; }
+.text-amber-300 { color: var(--th-bright) !important; }
+.text-amber-400 { color: var(--th-main)   !important; }
+.text-amber-500 { color: var(--th-mid)    !important; }
+.text-amber-600 { color: var(--th-mid)    !important; }
+.text-amber-700 { color: var(--th-dim)    !important; }
+.text-amber-800 { color: rgb(var(--th-dark-rgb)) !important; }
+.text-amber-900 { color: rgb(var(--th-dark-rgb) / 0.7) !important; }
+
+.bg-amber-400  { background-color: var(--th-main) !important; }
+.bg-amber-500  { background-color: var(--th-mid)  !important; }
+
+.bg-amber-400\/10 { background-color: rgb(var(--th-rgb) / 0.10) !important; }
+.bg-amber-400\/20 { background-color: rgb(var(--th-rgb) / 0.20) !important; }
+.bg-amber-500\/5  { background-color: rgb(var(--th-rgb) / 0.05) !important; }
+.bg-amber-500\/10 { background-color: rgb(var(--th-rgb) / 0.10) !important; }
+.bg-amber-500\/15 { background-color: rgb(var(--th-rgb) / 0.15) !important; }
+.bg-amber-500\/20 { background-color: rgb(var(--th-rgb) / 0.20) !important; }
+
+.border-amber-500    { border-color: rgb(var(--th-rgb))          !important; }
+.border-amber-500\/60 { border-color: rgb(var(--th-rgb) / 0.6)   !important; }
+.border-amber-700    { border-color: rgb(var(--th-dark-rgb))     !important; }
+.border-amber-800    { border-color: rgb(var(--th-dark-rgb))     !important; }
+.border-amber-800\/60 { border-color: rgb(var(--th-dark-rgb) / 0.6)  !important; }
+.border-amber-900    { border-color: rgb(var(--th-dark-rgb) / 0.6)   !important; }
+.border-amber-900\/20 { border-color: rgb(var(--th-dark-rgb) / 0.2)  !important; }
+.border-amber-900\/30 { border-color: rgb(var(--th-dark-rgb) / 0.3)  !important; }
+.border-amber-900\/40 { border-color: rgb(var(--th-dark-rgb) / 0.4)  !important; }
+
+.hover\:border-amber-700:hover { border-color: rgb(var(--th-dark-rgb)) !important; }
+.hover\:text-amber-400:hover   { color: var(--th-main) !important; }
+.hover\:bg-amber-500\/5:hover  { background-color: rgb(var(--th-rgb) / 0.05) !important; }
+
+/* Scrollbar thumb on hover */
+::-webkit-scrollbar-thumb:hover {
+  background: var(--th-mid);
+}
+
+/* Selection */
+::selection {
+  background: rgb(var(--th-rgb) / 0.3);
+}
+
+/* Focus ring */
+button:focus-visible,
+input:focus-visible,
+textarea:focus-visible {
+  outline-color: rgb(var(--th-rgb) / 0.6) !important;
+}
+
+/* Terminal scanline overlay (very subtle) */
+body::after {
+  content: '';
+  position: fixed;
+  inset: 0;
+  background: repeating-linear-gradient(
+    0deg,
+    transparent,
+    transparent 2px,
+    rgba(0,0,0,0.03) 2px,
+    rgba(0,0,0,0.03) 4px
+  );
+  pointer-events: none;
+  z-index: 9999;
+}
+
+@keyframes blink {
+  0%, 100% { opacity: 1; }
+  50%       { opacity: 0; }
 }

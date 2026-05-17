@@ -1,16 +1,21 @@
 'use client';
 
-import { CalendarDays, Activity, NotebookPen, BarChart2, Newspaper, TrendingUp } from 'lucide-react';
+import { CalendarDays, Activity, NotebookPen, BarChart2, Newspaper, TrendingUp, BarChart, DollarSign, LineChart, Gauge } from 'lucide-react';
 import { clsx } from 'clsx';
+import ThemeSelector from './ThemeSelector';
 
-export type Section = 'calendar' | 'metrics' | 'news' | 'cot' | 'notes';
+export type Section = 'calendar' | 'metrics' | 'news' | 'cot' | 'notes' | 'seasonality' | 'earnings' | 'options' | 'gex';
 
-const NAV_ITEMS: { id: Section; icon: React.ElementType; label: string }[] = [
-  { id: 'calendar', icon: CalendarDays,  label: 'Calendar'      },
-  { id: 'metrics',  icon: Activity,      label: 'Macro Metrics' },
-  { id: 'news',     icon: Newspaper,     label: 'News Feed'     },
-  { id: 'cot',      icon: TrendingUp,    label: 'COT Report'    },
-  { id: 'notes',    icon: NotebookPen,   label: 'Notes'         },
+const NAV_ITEMS: { id: Section; icon: React.ElementType; label: string; abbr: string }[] = [
+  { id: 'calendar',    icon: CalendarDays, label: 'CALENDAR',    abbr: 'CAL' },
+  { id: 'metrics',     icon: Activity,     label: 'MACRO',       abbr: 'MAC' },
+  { id: 'news',        icon: Newspaper,    label: 'NEWS FEED',   abbr: 'NEWS'},
+  { id: 'cot',         icon: TrendingUp,   label: 'COT REPORT',  abbr: 'COT' },
+  { id: 'seasonality', icon: BarChart,     label: 'SEASONALITY', abbr: 'SEA' },
+  { id: 'earnings',    icon: DollarSign,   label: 'EARNINGS',    abbr: 'ERN' },
+  { id: 'options',     icon: LineChart,    label: 'OPTIONS',     abbr: 'OPT' },
+  { id: 'gex',         icon: Gauge,        label: 'GEX',         abbr: 'GEX' },
+  { id: 'notes',       icon: NotebookPen,  label: 'NOTES',       abbr: 'NTS' },
 ];
 
 interface Props {
@@ -20,28 +25,42 @@ interface Props {
 
 export default function Sidebar({ active, onNavigate }: Props) {
   return (
-    <aside className="w-14 shrink-0 flex flex-col items-center py-4 gap-2 bg-[#09090b] border-r border-slate-800/60 h-screen sticky top-0">
-      {/* Logo */}
-      <div className="mb-4 p-2 rounded-md bg-amber-500/15 border border-amber-500/25">
-        <BarChart2 className="w-4 h-4 text-amber-400" />
+    <aside className="hidden md:flex w-40 shrink-0 flex-col bg-[#000000] border-r border-amber-900/40 h-screen sticky top-0">
+      {/* Logo / brand */}
+      <div className="px-3 py-3 border-b border-amber-900/40 flex items-center gap-2">
+        <BarChart2 className="w-4 h-4 text-amber-400 shrink-0" />
+        <div>
+          <p className="text-[11px] font-bold text-amber-400 uppercase tracking-widest leading-none">MACRO</p>
+          <p className="text-[9px] text-amber-700 uppercase tracking-widest leading-none mt-0.5">TERMINAL</p>
+        </div>
       </div>
 
       {/* Nav items */}
-      {NAV_ITEMS.map(({ id, icon: Icon, label }) => (
-        <button
-          key={id}
-          title={label}
-          onClick={() => onNavigate(id)}
-          className={clsx(
-            'w-10 h-10 flex items-center justify-center rounded-md transition-colors',
-            active === id
-              ? 'bg-amber-500/20 border border-amber-500/35 text-amber-300'
-              : 'text-slate-600 hover:text-slate-300 hover:bg-slate-800/60 border border-transparent',
-          )}
-        >
-          <Icon className="w-4.5 h-4.5" />
-        </button>
-      ))}
+      <nav className="flex-1 py-1">
+        {NAV_ITEMS.map(({ id, icon: Icon, label }) => (
+          <button
+            key={id}
+            onClick={() => onNavigate(id)}
+            className={clsx(
+              'w-full flex items-center gap-2.5 px-3 py-2.5 text-left transition-colors border-l-2',
+              active === id
+                ? 'bg-amber-500/15 border-amber-500 text-amber-300'
+                : 'border-transparent text-slate-600 hover:text-amber-400 hover:bg-amber-500/5 hover:border-amber-700',
+            )}
+          >
+            <Icon className={clsx('w-3.5 h-3.5 shrink-0', active === id ? 'text-amber-400' : 'text-slate-700')} />
+            <span className="text-[11px] font-bold uppercase tracking-wider">{label}</span>
+          </button>
+        ))}
+      </nav>
+
+      {/* Footer */}
+      <div className="border-t border-amber-900/30">
+        <ThemeSelector />
+        <div className="px-3 py-1.5">
+          <p className="text-[9px] text-slate-700 uppercase tracking-wider">v1.0 · Local</p>
+        </div>
+      </div>
     </aside>
   );
 }

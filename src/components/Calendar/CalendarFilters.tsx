@@ -1,6 +1,7 @@
 'use client';
 
 import { clsx } from 'clsx';
+import { X } from 'lucide-react';
 import type { CalendarFilters, Currency, DateFilter, Impact } from '@/lib/types';
 
 const CURRENCIES: Currency[] = ['USD', 'EUR', 'GBP', 'JPY', 'CAD', 'AUD'];
@@ -11,12 +12,12 @@ const IMPACTS: { value: Impact; label: string; dots: string }[] = [
   { value: 'holiday', label: 'Holiday', dots: '—'   },
 ];
 const DATE_OPTIONS: { value: DateFilter; label: string }[] = [
-  { value: 'all', label: 'All' },
-  { value: 'past7', label: 'Past 7d' },
-  { value: 'today', label: 'Today' },
-  { value: 'thisweek', label: 'This Week' },
-  { value: 'next7', label: 'Next 7d' },
-  { value: 'next30', label: 'Next 30d' },
+  { value: 'all',      label: 'All'      },
+  { value: 'past7',    label: 'Past 7d'  },
+  { value: 'today',    label: 'Today'    },
+  { value: 'thisweek', label: 'This Wk'  },
+  { value: 'next7',    label: 'Next 7d'  },
+  { value: 'next30',   label: 'Next 30d' },
   { value: 'upcoming', label: 'Upcoming' },
 ];
 
@@ -63,10 +64,10 @@ export default function CalendarFilters({ filters, onChange, totalCount, filtere
   const allImpacts = filters.impacts.length === 0;
 
   return (
-    <div className="border-b border-slate-800/60 bg-[#0d0d0f]/80 px-4 py-3 space-y-2.5">
+    <div className="border-b border-slate-800/60 bg-[#0d0d0f]/80 px-3 sm:px-4 py-2.5 space-y-2">
       {/* Row 1: Currency */}
-      <div className="flex flex-wrap items-center gap-2">
-        <span className="text-xs text-slate-600 uppercase tracking-wider w-16 shrink-0">Currency</span>
+      <div className="flex flex-wrap items-center gap-1.5">
+        <span className="hidden sm:inline text-xs text-slate-600 uppercase tracking-wider w-16 shrink-0">Currency</span>
         <button
           onClick={() => onChange({ ...filters, currencies: [] })}
           className={clsx(
@@ -95,8 +96,8 @@ export default function CalendarFilters({ filters, onChange, totalCount, filtere
       </div>
 
       {/* Row 2: Impact */}
-      <div className="flex flex-wrap items-center gap-2">
-        <span className="text-xs text-slate-600 uppercase tracking-wider w-16 shrink-0">Impact</span>
+      <div className="flex flex-wrap items-center gap-1.5">
+        <span className="hidden sm:inline text-xs text-slate-600 uppercase tracking-wider w-16 shrink-0">Impact</span>
         <button
           onClick={() => onChange({ ...filters, impacts: [] })}
           className={clsx(
@@ -113,7 +114,7 @@ export default function CalendarFilters({ filters, onChange, totalCount, filtere
             key={value}
             onClick={() => toggleImpact(value)}
             className={clsx(
-              'inline-flex items-center gap-1.5 px-2.5 py-1 rounded border text-xs font-medium font-mono transition-colors',
+              'inline-flex items-center gap-1 sm:gap-1.5 px-2 sm:px-2.5 py-1 rounded border text-xs font-medium font-mono transition-colors',
               filters.impacts.includes(value)
                 ? IMPACT_COLOR[value]
                 : 'border-slate-700/60 text-slate-500 hover:text-slate-300 hover:border-slate-600',
@@ -125,17 +126,17 @@ export default function CalendarFilters({ filters, onChange, totalCount, filtere
         ))}
       </div>
 
-      {/* Row 3: Date range + count */}
-      <div className="flex flex-wrap items-center justify-between gap-2">
-        <div className="flex flex-wrap items-center gap-2">
-          <span className="text-xs text-slate-600 uppercase tracking-wider w-16 shrink-0">Range</span>
+      {/* Row 3: Date range + date picker + count */}
+      <div className="flex flex-wrap items-center justify-between gap-1.5">
+        <div className="flex flex-wrap items-center gap-1.5">
+          <span className="hidden sm:inline text-xs text-slate-600 uppercase tracking-wider w-16 shrink-0">Range</span>
           {DATE_OPTIONS.map(({ value, label }) => (
             <button
               key={value}
-              onClick={() => onChange({ ...filters, dateFilter: value })}
+              onClick={() => onChange({ ...filters, dateFilter: value, selectedDate: undefined })}
               className={clsx(
-                'px-2.5 py-1 rounded border text-xs font-medium transition-colors',
-                filters.dateFilter === value
+                'px-2 sm:px-2.5 py-1 rounded border text-xs font-medium transition-colors',
+                filters.dateFilter === value && !filters.selectedDate
                   ? 'border-amber-500/40 text-amber-300 bg-amber-500/15'
                   : 'border-slate-700/60 text-slate-500 hover:text-slate-300 hover:border-slate-600',
               )}
@@ -143,9 +144,36 @@ export default function CalendarFilters({ filters, onChange, totalCount, filtere
               {label}
             </button>
           ))}
+
+          {/* Date picker */}
+          <div className="flex items-center gap-1">
+            <input
+              type="date"
+              value={filters.selectedDate ?? ''}
+              onChange={(e) => {
+                const d = e.target.value;
+                onChange({ ...filters, selectedDate: d || undefined });
+              }}
+              className={clsx(
+                'text-[11px] font-mono bg-transparent border py-0.5 px-1.5 transition-colors [color-scheme:dark] cursor-pointer',
+                filters.selectedDate
+                  ? 'border-amber-500/40 text-amber-300'
+                  : 'border-slate-700/60 text-slate-500 hover:border-slate-600 hover:text-slate-400',
+              )}
+            />
+            {filters.selectedDate && (
+              <button
+                onClick={() => onChange({ ...filters, selectedDate: undefined })}
+                className="text-slate-600 hover:text-amber-400 transition-colors"
+                title="Clear date"
+              >
+                <X className="w-3 h-3" />
+              </button>
+            )}
+          </div>
         </div>
-        <span className="text-xs text-slate-600 font-mono ml-auto">
-          {filteredCount} / {totalCount} events
+        <span className="text-xs text-slate-600 font-mono">
+          {filteredCount} / {totalCount}
         </span>
       </div>
     </div>

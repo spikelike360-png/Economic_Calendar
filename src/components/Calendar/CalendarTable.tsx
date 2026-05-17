@@ -22,16 +22,26 @@ function formatDisplayDate(dateStr: string): string {
   }).format(d);
 }
 
+function formatDisplayDateShort(dateStr: string): string {
+  const [year, month, day] = dateStr.split('-').map(Number);
+  const d = new Date(year, month - 1, day);
+  return new Intl.DateTimeFormat('en-US', {
+    weekday: 'short',
+    month: 'short',
+    day: 'numeric',
+  }).format(d);
+}
+
 function getTodayET(): string {
   return new Intl.DateTimeFormat('en-CA', { timeZone: 'America/New_York' }).format(new Date());
 }
 
 function ValueCell({ value, className }: { value: string | null; className?: string }) {
   if (!value) {
-    return <td className={clsx('px-3 py-2.5 font-mono text-xs text-right text-slate-700', className)}>—</td>;
+    return <td className={clsx('px-2 sm:px-3 py-2.5 font-mono text-xs text-right text-slate-700', className)}>—</td>;
   }
   return (
-    <td className={clsx('px-3 py-2.5 font-mono text-xs text-right text-slate-300 tabular-nums', className)}>
+    <td className={clsx('px-2 sm:px-3 py-2.5 font-mono text-xs text-right text-slate-300 tabular-nums', className)}>
       {value}
     </td>
   );
@@ -77,13 +87,13 @@ export default function CalendarTable({ events }: Props) {
       <table className="w-full text-sm border-collapse">
         <thead>
           <tr className="border-b border-slate-800/60 text-xs text-slate-600 uppercase tracking-wider bg-[#0d0d0f]">
-            <th className="px-3 py-2.5 text-left font-medium w-20">Time</th>
-            <th className="px-3 py-2.5 text-left font-medium w-20">CCY</th>
-            <th className="px-3 py-2.5 text-left font-medium w-28">Impact</th>
-            <th className="px-3 py-2.5 text-left font-medium">Event</th>
-            <th className="px-3 py-2.5 text-right font-medium w-24">Actual</th>
-            <th className="px-3 py-2.5 text-right font-medium w-24">Forecast</th>
-            <th className="px-3 py-2.5 text-right font-medium w-24">Previous</th>
+            <th className="px-2 sm:px-3 py-2.5 text-left font-medium w-16 sm:w-20">Time</th>
+            <th className="px-2 sm:px-3 py-2.5 text-left font-medium w-14 sm:w-20">CCY</th>
+            <th className="px-2 sm:px-3 py-2.5 text-left font-medium w-20 sm:w-28">Impact</th>
+            <th className="px-2 sm:px-3 py-2.5 text-left font-medium">Event</th>
+            <th className="px-2 sm:px-3 py-2.5 text-right font-medium w-16 sm:w-24">Actual</th>
+            <th className="hidden sm:table-cell px-3 py-2.5 text-right font-medium w-24">Forecast</th>
+            <th className="hidden sm:table-cell px-3 py-2.5 text-right font-medium w-24">Previous</th>
           </tr>
         </thead>
         <tbody>
@@ -104,7 +114,7 @@ export default function CalendarTable({ events }: Props) {
                   )}
                   onClick={() => toggle(date)}
                 >
-                  <td colSpan={7} className="px-4 py-2">
+                  <td colSpan={7} className="px-3 sm:px-4 py-2">
                     <div className="flex items-center gap-2">
                       {isCollapsed ? (
                         <ChevronRight className="w-3.5 h-3.5 text-slate-600 group-hover:text-slate-400 shrink-0 transition-colors" />
@@ -123,10 +133,12 @@ export default function CalendarTable({ events }: Props) {
                           isToday ? 'text-amber-300' : isPast ? 'text-slate-700' : 'text-slate-500',
                         )}
                       >
-                        {formatDisplayDate(date)}
+                        {/* Short date on mobile, full on sm+ */}
+                        <span className="sm:hidden">{formatDisplayDateShort(date)}</span>
+                        <span className="hidden sm:inline">{formatDisplayDate(date)}</span>
                       </span>
                       <span className="text-xs text-slate-700 font-mono ml-1">
-                        {dayEvents.length} event{dayEvents.length !== 1 ? 's' : ''}
+                        {dayEvents.length}
                       </span>
                     </div>
                   </td>
@@ -147,16 +159,16 @@ export default function CalendarTable({ events }: Props) {
                         isToday && 'bg-amber-500/[0.02]',
                       )}
                     >
-                      <td className="px-3 py-2.5 font-mono text-xs text-slate-500 whitespace-nowrap w-20">
+                      <td className="px-2 sm:px-3 py-2.5 font-mono text-xs text-slate-500 whitespace-nowrap w-16 sm:w-20">
                         {ev.time}
                       </td>
-                      <td className="px-3 py-2.5 w-20">
+                      <td className="px-2 sm:px-3 py-2.5 w-14 sm:w-20">
                         <CurrencyBadge currency={ev.currency} />
                       </td>
-                      <td className="px-3 py-2.5 w-28">
+                      <td className="px-2 sm:px-3 py-2.5 w-20 sm:w-28">
                         <ImpactBadge impact={ev.impact} />
                       </td>
-                      <td className="px-3 py-2.5 text-slate-200 text-sm">
+                      <td className="px-2 sm:px-3 py-2.5 text-slate-200 text-xs sm:text-sm">
                         <span className={clsx('leading-snug', isPast && 'text-slate-500')}>
                           {ev.title}
                         </span>
@@ -165,8 +177,8 @@ export default function CalendarTable({ events }: Props) {
                         value={ev.actual}
                         className={ev.isReleased ? 'text-slate-100 font-semibold' : undefined}
                       />
-                      <ValueCell value={ev.forecast} />
-                      <ValueCell value={ev.previous} />
+                      <ValueCell value={ev.forecast} className="hidden sm:table-cell" />
+                      <ValueCell value={ev.previous} className="hidden sm:table-cell" />
                     </tr>
                   ))}
               </Fragment>

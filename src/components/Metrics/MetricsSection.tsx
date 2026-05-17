@@ -5,6 +5,7 @@ import { TrendingUp, TrendingDown, Minus, RefreshCw, Wifi, WifiOff, Percent, Bar
 import { clsx } from 'clsx';
 import type { MacroMetric, MacroValue, MetricsResponse, Trend } from '@/lib/types';
 import CurrencyBadge from '@/components/ui/CurrencyBadge';
+import MetricChartModal from './MetricChartModal';
 
 const REFRESH_MS = 60 * 60 * 1000;
 
@@ -42,10 +43,12 @@ const METRIC_LABEL = {
 
 type MetricKey = keyof typeof METRIC_ICON;
 
-function MetricTile({ metricKey, data }: { metricKey: MetricKey; data: MacroValue }) {
+function MetricTile({ metricKey, data, onClick }: { metricKey: MetricKey; data: MacroValue; onClick: () => void }) {
   const Icon = METRIC_ICON[metricKey];
   return (
-    <div className="rounded-md bg-[#0d1020] border border-slate-800/80 p-3.5 flex flex-col gap-2 hover:border-amber-500/20 transition-colors group">
+    <div
+      onClick={onClick}
+      className="rounded-md bg-[#0d1020] border border-slate-800/80 p-3.5 flex flex-col gap-2 hover:border-amber-500/40 cursor-pointer transition-colors group">
       <div className="flex items-center justify-between">
         <p className="text-xs text-slate-600 uppercase tracking-wider font-medium leading-none">
           {METRIC_LABEL[metricKey]}
@@ -70,7 +73,20 @@ function MetricTile({ metricKey, data }: { metricKey: MetricKey; data: MacroValu
   );
 }
 
-function CountryCard({ metric }: { metric: MacroMetric }) {
+type MetricField = 'rate' | 'cpi' | 'unem' | 'gdp';
+type ModalTarget = { currency: string; field: MetricField; countryName: string; flag: string; currentValue: MacroValue } | null;
+
+const FIELD_TO_MACRO: Record<MetricField, keyof MacroMetric> = {
+  rate: 'interestRate',
+  cpi:  'inflation',
+  unem: 'unemployment',
+  gdp:  'gdpGrowth',
+};
+
+function CountryCard({ metric, onOpenChart }: { metric: MacroMetric; onOpenChart: (t: ModalTarget) => void }) {
+  const open = (field: MetricField) =>
+    onOpenChart({ currency: metric.id, field, countryName: metric.countryName, flag: metric.flag,
+      currentValue: metric[FIELD_TO_MACRO[field]] as MacroValue });
   return (
     <div className="rounded-lg border border-slate-800/60 bg-[#111113] overflow-hidden shadow-lg shadow-black/20 hover:border-amber-500/15 transition-colors">
       <div className="flex items-center justify-between px-4 py-3 border-b border-slate-800/60 bg-[#0d0d0f]">
@@ -81,10 +97,10 @@ function CountryCard({ metric }: { metric: MacroMetric }) {
         <CurrencyBadge currency={metric.id} />
       </div>
       <div className="grid grid-cols-2 gap-2 p-3">
-        <MetricTile metricKey="rate" data={metric.interestRate} />
-        <MetricTile metricKey="cpi"  data={metric.inflation} />
-        <MetricTile metricKey="unem" data={metric.unemployment} />
-        <MetricTile metricKey="gdp"  data={metric.gdpGrowth} />
+        <MetricTile metricKey="rate" data={metric.interestRate} onClick={() => open('rate')} />
+        <MetricTile metricKey="cpi"  data={metric.inflation}    onClick={() => open('cpi')}  />
+        <MetricTile metricKey="unem" data={metric.unemployment} onClick={() => open('unem')} />
+        <MetricTile metricKey="gdp"  data={metric.gdpGrowth}    onClick={() => open('gdp')}  />
       </div>
     </div>
   );
@@ -116,6 +132,7 @@ export default function MetricsSection() {
   const [data, setData] = useState<MetricsResponse | null>(null);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
+  const [modal, setModal] = useState<ModalTarget>(null);
   const timerRef = useRef<NodeJS.Timeout | null>(null);
 
   const fetchData = useCallback(async (silent = false) => {
@@ -200,13 +217,24 @@ export default function MetricsSection() {
       <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-4">
         {loading
           ? [...Array(6)].map((_, i) => <SkeletonCard key={i} />)
-          : (data?.metrics ?? []).map((m) => <CountryCard key={m.id} metric={m} />)
+          : (data?.metrics ?? []).map((m) => <CountryCard key={m.id} metric={m} onOpenChart={setModal} />)
         }
       </div>
 
       <p className="text-xs text-slate-700 text-center">
         USD via FRED (St. Louis Fed) · EUR/GBP/JPY/CAD/AUD via Trading Economics · Eastern Time
       </p>
+
+      {modal && (
+        <MetricChartModal
+          currency={modal.currency}
+          field={modal.field}
+          countryName={modal.countryName}
+          flag={modal.flag}
+          currentValue={modal.currentValue}
+          onClose={() => setModal(null)}
+        />
+      )}
     </div>
   );
 }
