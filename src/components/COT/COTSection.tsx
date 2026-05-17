@@ -283,7 +283,7 @@ function NetChart({ history, compact = false }: { history: COTHistoryPoint[]; co
           ))}
         </div>
       </div>
-      <ResponsiveContainer width="100%" height={compact ? 180 : 240}>
+      <ResponsiveContainer key={span} width="100%" height={compact ? 180 : 240}>
         <ComposedChart data={points} margin={{ top: 4, right: hasPrice && !hidden.has('price') ? 48 : 8, left: -8, bottom: 0 }}>
           <CartesianGrid strokeDasharray="3 3" stroke="#1e293b" vertical={false} />
           <XAxis
@@ -321,6 +321,7 @@ function NetChart({ history, compact = false }: { history: COTHistoryPoint[]; co
               yAxisId="net" type="stepAfter" dataKey="net"
               name="Non-Comm" stroke={CHART_COLORS.nc}
               strokeWidth={1.5} dot={false} activeDot={{ r: 3, strokeWidth: 0 }}
+              isAnimationActive={false}
             />
           )}
           {!hidden.has('comm') && (
@@ -328,6 +329,7 @@ function NetChart({ history, compact = false }: { history: COTHistoryPoint[]; co
               yAxisId="net" type="stepAfter" dataKey="commercial"
               name="Commercial" stroke={CHART_COLORS.comm}
               strokeWidth={1.5} dot={false} activeDot={{ r: 3, strokeWidth: 0 }}
+              isAnimationActive={false}
             />
           )}
           {!hidden.has('nr') && (
@@ -335,6 +337,7 @@ function NetChart({ history, compact = false }: { history: COTHistoryPoint[]; co
               yAxisId="net" type="stepAfter" dataKey="nonRept"
               name="Non-Rept" stroke={CHART_COLORS.nr}
               strokeWidth={1.5} dot={false} activeDot={{ r: 3, strokeWidth: 0 }}
+              isAnimationActive={false}
             />
           )}
           {hasPrice && !hidden.has('price') && (
@@ -343,6 +346,7 @@ function NetChart({ history, compact = false }: { history: COTHistoryPoint[]; co
               name="Price" stroke={CHART_COLORS.price}
               strokeWidth={1} dot={false} activeDot={{ r: 3, strokeWidth: 0 }}
               strokeOpacity={0.8}
+              isAnimationActive={false}
             />
           )}
         </ComposedChart>

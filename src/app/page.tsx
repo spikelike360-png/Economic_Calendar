@@ -13,6 +13,7 @@ import SeasonalitySection from '@/components/Seasonality/SeasonalitySection';
 import EarningsSection from '@/components/Earnings/EarningsSection';
 import OptionsSection from '@/components/Options/OptionsSection';
 import GEXBotSection from '@/components/GEXBot/GEXBotSection';
+import QuickNoteModal from '@/components/Notes/QuickNoteModal';
 
 const SECTIONS: Section[] = ['calendar', 'metrics', 'news', 'cot', 'seasonality', 'earnings', 'options', 'gex', 'notes'];
 const SWIPE_THRESHOLD = 50; // px
@@ -69,6 +70,9 @@ export default function Home() {
 
       {/* Bottom nav — mobile only */}
       <MobileNav active={active} onNavigate={setActive} />
+
+      {/* Quick note popup — hidden on notes page */}
+      {active !== 'notes' && <QuickNoteModal onNavigateNotes={() => setActive('notes')} />}
     </div>
   );
 }

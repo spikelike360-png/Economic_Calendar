@@ -25,7 +25,7 @@ export const CONTRACT_DEFS = [
   { key: 'ust30',  code: '020601', label: '30Y Bond',   exchange: 'CME',   category: 'rates'  },
   { key: 'ff',     code: '045601', label: 'Fed Funds',  exchange: 'CME',   category: 'rates'  },
   // Energy
-  { key: 'wti',    code: '067411', label: 'WTI Crude',  exchange: 'ICE',   category: 'energy' },
+  { key: 'wti',    code: '067651', label: 'WTI Crude',  exchange: 'NYMEX', category: 'energy' },
   { key: 'ng',     code: '023651', label: 'Nat Gas',    exchange: 'CME',   category: 'energy' },
   // Metals
   { key: 'gold',   code: '088691', label: 'Gold',       exchange: 'COMEX', category: 'metals' },
