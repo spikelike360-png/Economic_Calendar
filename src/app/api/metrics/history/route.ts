@@ -9,7 +9,7 @@ const FRED_BASE = 'https://api.stlouisfed.org/fred/series/observations';
 
 type MetricField = 'rate' | 'cpi' | 'unem' | 'gdp';
 
-const SERIES: Record<Currency, Record<MetricField, { id: string; units?: string; quarterly?: boolean }>> = {
+const SERIES: Record<Currency, Record<MetricField, { id: string; units?: string; quarterly?: boolean; daily?: boolean }>> = {
   USD: {
     rate: { id: 'FEDFUNDS' },
     cpi:  { id: 'CPIAUCSL',            units: 'pc1' },
@@ -17,7 +17,7 @@ const SERIES: Record<Currency, Record<MetricField, { id: string; units?: string;
     gdp:  { id: 'A191RL1Q225SBEA',     quarterly: true },
   },
   EUR: {
-    rate: { id: 'ECBDFR' },
+    rate: { id: 'ECBDFR',              daily: true },   // daily series — needs frequency=m
     cpi:  { id: 'CP0000EZ19M086NEST',  units: 'pc1' },
     unem: { id: 'LRHUTTTTEZM156S' },
     gdp:  { id: 'CLVMEURSCAB1GQEA19',  units: 'pca', quarterly: true },
@@ -30,7 +30,7 @@ const SERIES: Record<Currency, Record<MetricField, { id: string; units?: string;
   },
   JPY: {
     rate: { id: 'IRSTCI01JPM156N' },
-    cpi:  { id: 'JPNCPIALLMINMEI',     units: 'pc1' },
+    cpi:  { id: 'JPNCPIALLMINMEI',     units: 'pc1' }, // FRED stale at Jun 2021, TE tail supplements
     unem: { id: 'LRHUTTTTJPM156S' },
     gdp:  { id: 'NAEXKP01JPQ657S',     quarterly: true },
   },
@@ -151,16 +151,19 @@ export async function GET(req: NextRequest) {
   if (!apiKey) return NextResponse.json({ error: 'No FRED API key' }, { status: 500 });
 
   const cfg   = SERIES[currency][field];
-  const limit = cfg.quarterly ? '24' : '60';
+  const limit = cfg.quarterly ? '40' : '120'; // 10 years monthly / ~10 years quarterly
 
   try {
     const params = new URLSearchParams({
-      series_id: cfg.id,
-      api_key:   apiKey,
-      file_type: 'json',
+      series_id:  cfg.id,
+      api_key:    apiKey,
+      file_type:  'json',
       sort_order: 'desc',
       limit,
-      ...(cfg.units ? { units: cfg.units } : {}),
+      ...(cfg.units      ? { units: cfg.units }         : {}),
+      ...(cfg.daily      ? { frequency: 'm' }           : {}), // aggregate daily series to monthly
+      ...(!cfg.quarterly && !cfg.daily ? { frequency: 'm' } : {}), // enforce monthly for all non-quarterly
+      ...(cfg.quarterly  ? { frequency: 'q' }           : {}),
     });
 
     const res = await fetch(`${FRED_BASE}?${params}`, { signal: AbortSignal.timeout(8_000) });
@@ -194,10 +197,13 @@ export async function GET(req: NextRequest) {
     }
     const tail = Array.from(tailByPeriod.values()).sort((a, b) => a.date.localeCompare(b.date));
 
-    const points = [...fredPoints, ...tail];
+    // Final dedup by period across FRED + tail (tail wins — more current)
+    const byPeriod = new Map<string, HistoryPoint>();
+    for (const pt of [...fredPoints, ...tail]) byPeriod.set(pt.period, pt);
+    const points = Array.from(byPeriod.values()).sort((a, b) => a.date.localeCompare(b.date));
 
     return NextResponse.json({ points }, {
-      headers: { 'Cache-Control': 's-maxage=3600, stale-while-revalidate=300' },
+      headers: { 'Cache-Control': 's-maxage=1800, stale-while-revalidate=300' },
     });
   } catch (err) {
     return NextResponse.json({ error: String(err) }, { status: 502 });

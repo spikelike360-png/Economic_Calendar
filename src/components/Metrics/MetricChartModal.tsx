@@ -76,10 +76,11 @@ export default function MetricChartModal({ currency, field, countryName, flag, c
       if (j.error) throw new Error(j.error);
       let pts: HistoryPoint[] = j.points;
 
-      // Append TE current value if newer than last history point
+      // Append current value only if its period isn't already in history
       const curDate = currentValue.lastUpdated ? currentValue.lastUpdated + '-01' : '';
       const lastDate = pts.length > 0 ? pts[pts.length - 1].date : '0000-00-00';
-      if (curDate && curDate > lastDate) {
+      const periodExists = pts.some((p) => p.period === currentValue.period);
+      if (curDate && curDate > lastDate && !periodExists) {
         const val = parseFloat(currentValue.value.replace('%', '').replace('+', '').trim());
         if (!isNaN(val)) {
           pts = [...pts, { date: curDate, value: val, period: currentValue.period, fromCalendar: true }];
