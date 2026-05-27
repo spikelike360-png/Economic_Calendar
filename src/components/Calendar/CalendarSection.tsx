@@ -7,6 +7,7 @@ import type { Currency, DateFilter, Impact } from '@/lib/types';
 import { CalendarSkeleton } from '@/components/ui/LoadingSkeleton';
 import CalendarFiltersBar from './CalendarFilters';
 import CalendarTable from './CalendarTable';
+import OptionsCalendar from './OptionsCalendar';
 import { clsx } from 'clsx';
 
 const DEFAULT_FILTERS: CalendarFilters = {
@@ -129,12 +130,28 @@ function lsWrite(events: CalendarEvent[]): void {
   } catch {}
 }
 
+function looseKey(e: CalendarEvent): string {
+  return `${e.date}|${e.currency}|${e.title.toLowerCase().replace(/[^a-z0-9]/g, '')}`;
+}
+
 function mergeEvents(stored: CalendarEvent[], fresh: CalendarEvent[]): CalendarEvent[] {
   const map = new Map<string, CalendarEvent>();
   for (const e of stored) map.set(e.id, e);
   // Fresh events override stored (updates actuals, isReleased, etc.)
   for (const e of fresh) map.set(e.id, e);
-  return Array.from(map.values()).sort((a, b) => a.timestamp - b.timestamp || a.title.localeCompare(b.title));
+
+  // Loose dedup: if two events share date|currency|title but differ in time
+  // (timezone-shifted duplicates), keep the one whose time looks like ET (earlier in day).
+  const looseMap = new Map<string, CalendarEvent>();
+  for (const e of Array.from(map.values())) {
+    const lk = looseKey(e);
+    const existing = looseMap.get(lk);
+    if (!existing || (e.actual && !existing.actual) || (!existing.actual && e.timestamp < existing.timestamp)) {
+      looseMap.set(lk, e);
+    }
+  }
+
+  return Array.from(looseMap.values()).sort((a, b) => a.timestamp - b.timestamp || a.title.localeCompare(b.title));
 }
 
 // ---------- module-level cache ----------
@@ -149,6 +166,7 @@ export default function CalendarSection() {
   const [refreshing, setRefreshing] = useState(false);
   const [histLoading, setHistLoading] = useState(false);
   const [filters, setFilters]       = useState<CalendarFilters>(DEFAULT_FILTERS);
+  const [calView, setCalView]       = useState<'economic' | 'options'>('economic');
   const timerRef = useRef<NodeJS.Timeout | null>(null);
 
   // On mount: restore from localStorage immediately (before first fetch)
@@ -290,33 +308,57 @@ export default function CalendarSection() {
         </div>
       </div>
 
-      {/* Error banner */}
-      {data?.error && (
-        <div className="flex items-center gap-2 px-4 sm:px-5 py-2.5 bg-amber-500/8 border-b border-amber-500/15 text-xs text-amber-400">
-          <AlertTriangle className="w-3.5 h-3.5 shrink-0" />
-          {data.error}
-        </div>
-      )}
-
-      {/* Filters */}
-      <CalendarFiltersBar
-        filters={filters}
-        onChange={(f) => { setFilters(f); saveFilters(f); }}
-        totalCount={data?.events.length ?? 0}
-        filteredCount={filtered.length}
-      />
-
-      {/* Table */}
-      <div className="min-h-[400px]">
-        {loading || histLoading ? <CalendarSkeleton /> : <CalendarTable events={filtered} />}
+      {/* View tabs */}
+      <div className="flex gap-1 px-4 py-2 border-b border-slate-800/60 bg-[#0d0d0f]">
+        {(['economic', 'options'] as const).map((v) => (
+          <button
+            key={v}
+            onClick={() => setCalView(v)}
+            className={clsx(
+              'px-3 py-1.5 rounded text-[11px] font-bold uppercase tracking-wider transition-colors',
+              calView === v
+                ? 'bg-amber-500/20 text-amber-400 border border-amber-500/30'
+                : 'text-slate-600 border border-transparent hover:text-slate-400 hover:border-slate-700/40',
+            )}
+          >
+            {v === 'economic' ? 'Economic' : 'Options / OpEx'}
+          </button>
+        ))}
       </div>
 
-      {/* Footer */}
-      {data && !loading && (
-        <div className="px-4 sm:px-5 py-3 border-t border-slate-800/60 text-xs text-slate-700 flex justify-between">
-          <span>Forex Factory · Eastern Time (ET)</span>
-          <span className="hidden sm:inline">Auto-refreshes every 5 min</span>
-        </div>
+      {calView === 'economic' ? (
+        <>
+          {/* Error banner */}
+          {data?.error && (
+            <div className="flex items-center gap-2 px-4 sm:px-5 py-2.5 bg-amber-500/8 border-b border-amber-500/15 text-xs text-amber-400">
+              <AlertTriangle className="w-3.5 h-3.5 shrink-0" />
+              {data.error}
+            </div>
+          )}
+
+          {/* Filters */}
+          <CalendarFiltersBar
+            filters={filters}
+            onChange={(f) => { setFilters(f); saveFilters(f); }}
+            totalCount={data?.events.length ?? 0}
+            filteredCount={filtered.length}
+          />
+
+          {/* Table */}
+          <div className="min-h-[400px]">
+            {loading || histLoading ? <CalendarSkeleton /> : <CalendarTable events={filtered} />}
+          </div>
+
+          {/* Footer */}
+          {data && !loading && (
+            <div className="px-4 sm:px-5 py-3 border-t border-slate-800/60 text-xs text-slate-700 flex justify-between">
+              <span>Forex Factory · Eastern Time (ET)</span>
+              <span className="hidden sm:inline">Auto-refreshes every 5 min</span>
+            </div>
+          )}
+        </>
+      ) : (
+        <OptionsCalendar />
       )}
     </div>
   );

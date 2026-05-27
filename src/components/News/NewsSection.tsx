@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect, useCallback } from 'react';
-import { RefreshCw, ExternalLink, TrendingUp, Globe, DollarSign, BarChart2, BookOpen, Search, X } from 'lucide-react';
+import { RefreshCw, ExternalLink, TrendingUp, Globe, DollarSign, BarChart2, BookOpen, Search, X, Star } from 'lucide-react';
 import { clsx } from 'clsx';
 import type { NewsItem, NewsCategory } from '@/lib/scraper/newsFeeds';
 import type { ResearchPaper, ResearchResponse } from '@/app/api/research/route';
@@ -49,6 +49,25 @@ let _researchCache: ResearchResponse | null = null;
 let _researchCachedAt = 0;
 const RESEARCH_STALE_MS = 6 * 60 * 60 * 1000;
 
+const SAVED_LS_KEY = 'saved_papers_v2';
+
+function loadSaved(): Map<string, ResearchPaper> {
+  try {
+    const raw = localStorage.getItem(SAVED_LS_KEY);
+    if (!raw) return new Map();
+    const obj: Record<string, ResearchPaper> = JSON.parse(raw);
+    return new Map(Object.entries(obj));
+  } catch { return new Map(); }
+}
+
+function persistSaved(map: Map<string, ResearchPaper>): void {
+  try {
+    const obj: Record<string, ResearchPaper> = {};
+    map.forEach((v, k) => { obj[k] = v; });
+    localStorage.setItem(SAVED_LS_KEY, JSON.stringify(obj));
+  } catch {}
+}
+
 const RESEARCH_CATS = ['All', 'Trading & Microstructure', 'Portfolio Management', 'Statistical Finance', 'Risk Management', 'Mathematical Finance', 'Computational Finance', 'Economics / Finance'] as const;
 type ResearchCat = typeof RESEARCH_CATS[number];
 
@@ -58,9 +77,23 @@ function ResearchPanel() {
   const [loading, setLoading]       = useState(_researchCache === null);
   const [refreshing, setRefreshing] = useState(false);
   const [error, setError]           = useState<string | null>(null);
-  const [sourceFil, setSourceFil]   = useState<'all' | 'arXiv' | 'NBER'>('all');
+  const [sourceFil, setSourceFil]   = useState<'all' | 'arXiv' | 'NBER' | 'saved'>('all');
   const [catFil, setCatFil]         = useState<ResearchCat>('All');
   const [query, setQuery]           = useState('');
+  const [savedPapers, setSavedPapers] = useState<Map<string, ResearchPaper>>(new Map());
+
+  useEffect(() => { setSavedPapers(loadSaved()); }, []);
+
+  const toggleSave = useCallback((paper: ResearchPaper, e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setSavedPapers((prev) => {
+      const next = new Map(prev);
+      if (next.has(paper.id)) next.delete(paper.id); else next.set(paper.id, paper);
+      persistSaved(next);
+      return next;
+    });
+  }, []);
 
   const load = useCallback(async (force = false) => {
     if (!force && _researchCache && Date.now() - _researchCachedAt < RESEARCH_STALE_MS) {
@@ -90,12 +123,14 @@ function ResearchPanel() {
   useEffect(() => { load(); }, [load]);
 
   const q = query.toLowerCase().trim();
-  const visible = papers.filter((p) => {
-    if (sourceFil !== 'all' && p.source !== sourceFil) return false;
-    if (catFil !== 'All' && p.category !== catFil) return false;
-    if (q && !p.title.toLowerCase().includes(q) && !p.authors.toLowerCase().includes(q) && !p.abstract.toLowerCase().includes(q)) return false;
-    return true;
-  });
+  const visible: ResearchPaper[] = sourceFil === 'saved'
+    ? Array.from(savedPapers.values())
+    : papers.filter((p) => {
+        if (sourceFil !== 'all' && p.source !== sourceFil) return false;
+        if (catFil !== 'All' && p.category !== catFil) return false;
+        if (q && !p.title.toLowerCase().includes(q) && !p.authors.toLowerCase().includes(q) && !p.abstract.toLowerCase().includes(q)) return false;
+        return true;
+      });
 
   return (
     <div className="flex flex-col gap-3 h-full">
@@ -118,7 +153,7 @@ function ResearchPanel() {
       {/* Filter row */}
       <div className="flex items-center justify-between gap-2 flex-wrap">
         {/* Source filter */}
-        <div className="flex gap-1">
+        <div className="flex gap-1 flex-wrap">
           {(['all', 'arXiv', 'NBER'] as const).map((s) => (
             <button key={s} onClick={() => setSourceFil(s)}
               className={clsx(
@@ -130,6 +165,16 @@ function ResearchPanel() {
               {s === 'all' ? `All (${papers.length})` : `${s} (${papers.filter(p => p.source === s).length})`}
             </button>
           ))}
+          <button onClick={() => setSourceFil('saved')}
+            className={clsx(
+              'flex items-center gap-1 px-2 py-0.5 rounded text-[10px] font-mono uppercase tracking-widest border transition-colors',
+              sourceFil === 'saved'
+                ? 'bg-yellow-500/20 text-yellow-400 border-yellow-500/40'
+                : 'text-slate-600 border-slate-800 hover:text-yellow-500',
+            )}>
+            <Star size={9} className={sourceFil === 'saved' ? 'fill-yellow-400' : ''} />
+            Saved ({savedPapers.size})
+          </button>
         </div>
         <div className="flex items-center gap-2">
           {fetchedAt && <span className="text-[10px] text-slate-600 font-mono">{timeAgo(fetchedAt)}</span>}
@@ -186,9 +231,11 @@ function ResearchPanel() {
           </div>
         ) : (
           <div className="divide-y divide-slate-800/50">
-            {visible.map((paper) => (
+            {visible.map((paper) => {
+              const isSaved = savedPapers.has(paper.id);
+              return (
               <a key={paper.id} href={paper.url} target="_blank" rel="noopener noreferrer"
-                className="flex flex-col gap-1.5 px-5 py-4 hover:bg-slate-800/30 transition-colors group">
+                className="flex flex-col gap-1.5 px-5 py-4 hover:bg-slate-800/30 transition-colors group relative">
                 <div className="flex items-center gap-2 flex-wrap">
                   <span className={clsx(
                     'text-[10px] font-semibold uppercase tracking-wide px-1.5 py-0.5 rounded border',
@@ -199,6 +246,18 @@ function ResearchPanel() {
                     {paper.source}
                   </span>
                   <span className="text-[10px] text-slate-600 ml-auto font-mono">{timeAgo(paper.publishedAt)}</span>
+                  <button
+                    onClick={(e) => toggleSave(paper, e)}
+                    className={clsx(
+                      'p-1 rounded transition-colors',
+                      isSaved
+                        ? 'text-yellow-400 hover:text-yellow-300'
+                        : 'text-slate-700 hover:text-yellow-500 opacity-0 group-hover:opacity-100',
+                    )}
+                    title={isSaved ? 'Remove from saved' : 'Save paper'}
+                  >
+                    <Star size={13} className={isSaved ? 'fill-yellow-400' : ''} />
+                  </button>
                 </div>
                 <div className="flex items-start gap-2">
                   <p className="text-sm font-medium text-slate-200 leading-snug group-hover:text-white transition-colors flex-1">
@@ -209,7 +268,8 @@ function ResearchPanel() {
                 {paper.authors && <p className="text-[11px] text-slate-500 font-mono">{paper.authors}</p>}
                 {paper.abstract && <p className="text-xs text-slate-600 leading-relaxed line-clamp-2">{paper.abstract}</p>}
               </a>
-            ))}
+              );
+            })}
           </div>
         )}
       </div>

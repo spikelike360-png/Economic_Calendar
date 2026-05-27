@@ -10,20 +10,14 @@ if %errorlevel%==0 (
 )
 
 echo Starting dev server...
-start "Economic Calendar Server" cmd /k "npm run dev"
+start "" /b cmd /c "cd /d e:\Economic_Calendar && npm run dev > e:\Economic_Calendar\dev-server.log 2>&1"
 
 echo Waiting for server to be ready...
-:waitloop
-timeout /t 2 /nobreak >nul
-netstat -an | find "127.0.0.1:3000" | find "LISTENING" >nul 2>&1
-if %errorlevel%==1 goto :waitloop
-
-:: Small extra pause for Next.js to finish compiling first page
-timeout /t 2 /nobreak >nul
+powershell -Command "while($true){try{$r=Invoke-WebRequest http://localhost:3000 -UseBasicParsing -TimeoutSec 2 -EA Stop;if($r.StatusCode -eq 200){break}}catch{Start-Sleep 2}}"
 
 :open
 echo Opening dashboard...
-start msedge --app=http://localhost:3000 --window-size=1400,900 2>nul
+start chrome --app=http://localhost:3000 --window-size=1400,900 2>nul
 if errorlevel 1 (
-  start chrome --app=http://localhost:3000 --window-size=1400,900 2>nul
+  start msedge --app=http://localhost:3000 --window-size=1400,900 2>nul
 )

@@ -283,7 +283,7 @@ function NetChart({ history, compact = false }: { history: COTHistoryPoint[]; co
           ))}
         </div>
       </div>
-      <ResponsiveContainer key={span} width="100%" height={compact ? 180 : 240}>
+      <ResponsiveContainer key={span} width="100%" height={compact ? 220 : 340}>
         <ComposedChart data={points} margin={{ top: 4, right: hasPrice && !hidden.has('price') ? 48 : 8, left: -8, bottom: 0 }}>
           <CartesianGrid strokeDasharray="3 3" stroke="#1e293b" vertical={false} />
           <XAxis

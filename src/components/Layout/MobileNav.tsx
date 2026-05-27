@@ -1,6 +1,6 @@
 'use client';
 
-import { CalendarDays, Activity, Newspaper, TrendingUp, NotebookPen, BarChart, DollarSign, LineChart, Gauge } from 'lucide-react';
+import { CalendarDays, Activity, Newspaper, TrendingUp, NotebookPen, BarChart, DollarSign, LineChart, Gauge, Zap, ClipboardList } from 'lucide-react';
 import { clsx } from 'clsx';
 import type { Section } from './Sidebar';
 
@@ -13,6 +13,7 @@ const NAV_ITEMS: { id: Section; icon: React.ElementType; label: string }[] = [
   { id: 'earnings',    icon: DollarSign,   label: 'Earnings' },
   { id: 'options',     icon: LineChart,    label: 'Options'  },
   { id: 'gex',         icon: Gauge,        label: 'GEX'      },
+  { id: 'journal',     icon: ClipboardList, label: 'Journal'  },
   { id: 'notes',       icon: NotebookPen,  label: 'Notes'    },
 ];
 

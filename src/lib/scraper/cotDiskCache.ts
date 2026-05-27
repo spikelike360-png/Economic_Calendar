@@ -44,7 +44,7 @@ export function isCOTCacheFresh(data: COTResponse): boolean {
   // A new release won't have a newer Tuesday date until next week.
   const reportTs = new Date(latestReport + 'T00:00:00Z').getTime();
   const ageMs = Date.now() - reportTs;
-  return ageMs < 8 * 24 * 60 * 60 * 1000; // 8 days
+  return ageMs < 10 * 24 * 60 * 60 * 1000; // 10 days — covers full week gap to next Friday release
 }
 
 export function readDiskCache(): COTResponse | null {

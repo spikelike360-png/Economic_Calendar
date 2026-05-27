@@ -1,7 +1,6 @@
 import type { Metadata } from 'next';
 import { Inter, JetBrains_Mono } from 'next/font/google';
 import './globals.css';
-import SWRegister from '@/components/SWRegister';
 import ThemeProvider from '@/components/Layout/ThemeProvider';
 
 const inter = Inter({
@@ -26,7 +25,6 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
     <html lang="en" className={`${inter.variable} ${mono.variable} dark`}>
       <body className={`${mono.className} h-screen overflow-hidden bg-[#000000] text-slate-100`}>
         <ThemeProvider />
-        <SWRegister />
         {children}
       </body>
     </html>

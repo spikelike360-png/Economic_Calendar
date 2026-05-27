@@ -13,9 +13,11 @@ import SeasonalitySection from '@/components/Seasonality/SeasonalitySection';
 import EarningsSection from '@/components/Earnings/EarningsSection';
 import OptionsSection from '@/components/Options/OptionsSection';
 import GEXBotSection from '@/components/GEXBot/GEXBotSection';
+import ESISection from '@/components/ESI/ESISection';
+import JournalSection from '@/components/Journal/JournalSection';
 import QuickNoteModal from '@/components/Notes/QuickNoteModal';
 
-const SECTIONS: Section[] = ['calendar', 'metrics', 'news', 'cot', 'seasonality', 'earnings', 'options', 'gex', 'notes'];
+const SECTIONS: Section[] = ['calendar', 'metrics', 'news', 'cot', 'seasonality', 'earnings', 'options', 'gex', 'journal', 'notes'];
 const SWIPE_THRESHOLD = 50; // px
 
 export default function Home() {
@@ -58,12 +60,14 @@ export default function Home() {
         >
           {active === 'calendar' && <CalendarSection />}
           {active === 'metrics'  && <MetricsSection />}
+          {active === 'esi'      && <ESISection />}
           {active === 'news'     && <NewsSection />}
           {active === 'cot'          && <COTSection />}
           {active === 'seasonality'  && <SeasonalitySection />}
           {active === 'earnings'     && <EarningsSection />}
           {active === 'options'      && <OptionsSection />}
           {active === 'gex'          && <GEXBotSection />}
+          {active === 'journal'      && <JournalSection />}
           {active === 'notes'        && <NotesSection />}
         </main>
       </div>

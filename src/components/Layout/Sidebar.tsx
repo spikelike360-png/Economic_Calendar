@@ -1,13 +1,13 @@
 'use client';
 
-import { CalendarDays, Activity, NotebookPen, BarChart2, Newspaper, TrendingUp, BarChart, DollarSign, LineChart, Gauge } from 'lucide-react';
+import { CalendarDays, Activity, NotebookPen, BarChart2, Newspaper, TrendingUp, BarChart, DollarSign, LineChart, Gauge, Zap, ClipboardList } from 'lucide-react';
 import { clsx } from 'clsx';
 import ThemeSelector from './ThemeSelector';
 
-export type Section = 'calendar' | 'metrics' | 'news' | 'cot' | 'notes' | 'seasonality' | 'earnings' | 'options' | 'gex';
+export type Section = 'calendar' | 'metrics' | 'news' | 'cot' | 'notes' | 'seasonality' | 'earnings' | 'options' | 'gex' | 'esi' | 'journal';
 
 const NAV_ITEMS: { id: Section; icon: React.ElementType; label: string; abbr: string }[] = [
-  { id: 'calendar',    icon: CalendarDays, label: 'CALENDAR',    abbr: 'CAL' },
+  { id: 'calendar',    icon: CalendarDays,  label: 'CALENDAR',    abbr: 'CAL' },
   { id: 'metrics',     icon: Activity,     label: 'MACRO',       abbr: 'MAC' },
   { id: 'news',        icon: Newspaper,    label: 'NEWS FEED',   abbr: 'NEWS'},
   { id: 'cot',         icon: TrendingUp,   label: 'COT REPORT',  abbr: 'COT' },
@@ -15,6 +15,7 @@ const NAV_ITEMS: { id: Section; icon: React.ElementType; label: string; abbr: st
   { id: 'earnings',    icon: DollarSign,   label: 'EARNINGS',    abbr: 'ERN' },
   { id: 'options',     icon: LineChart,    label: 'OPTIONS',     abbr: 'OPT' },
   { id: 'gex',         icon: Gauge,        label: 'GEX',         abbr: 'GEX' },
+  { id: 'journal',     icon: ClipboardList, label: 'JOURNAL',     abbr: 'JRN' },
   { id: 'notes',       icon: NotebookPen,  label: 'NOTES',       abbr: 'NTS' },
 ];
 
