@@ -11,6 +11,7 @@ import type {
   OptionsChainSummary, UnusualOption, GEXData,
 } from '@/lib/types';
 import { clsx } from 'clsx';
+import { DixGexWidget } from '@/components/Metrics/MacroWidgets';
 
 // ── helpers ────────────────────────────────────────────────────────────────
 
@@ -56,7 +57,7 @@ function vixLabel(v: number) {
 
 // ── VIX Term Structure ─────────────────────────────────────────────────────
 
-function VIXTermPanel({ vix }: { vix: VIXTermStructure }) {
+function VIXTermPanel({ vix, liveVix, vixTime }: { vix: VIXTermStructure; liveVix: number | null; vixTime: string }) {
   const nodes = [
     { label: '9D',  value: vix.vix9d },
     { label: 'VIX', value: vix.vix   },
@@ -80,12 +81,35 @@ function VIXTermPanel({ vix }: { vix: VIXTermStructure }) {
           <p className="text-[10px] text-slate-600 mt-0.5 uppercase tracking-wider">CBOE Volatility Indices</p>
         </div>
         <div className="text-right">
-          <span className={clsx('text-2xl font-bold font-mono', vixColor(vixVal))}>
-            {vixVal > 0 ? fmt(vixVal) : '—'}
-          </span>
-          <p className={clsx('text-[10px] font-bold uppercase tracking-wider', vixColor(vixVal))}>
-            {vixVal > 0 ? vixLabel(vixVal) : ''}
-          </p>
+          {liveVix !== null ? (
+            <>
+              <div className="flex items-center justify-end gap-1.5 mb-0.5">
+                <span className="relative flex h-2 w-2">
+                  <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75" />
+                  <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500" />
+                </span>
+                <span className="text-[10px] text-emerald-500 font-mono uppercase tracking-wider">Live</span>
+              </div>
+              <span className={clsx('text-3xl font-bold font-mono tabular-nums', vixColor(liveVix))}>
+                {fmt(liveVix)}
+              </span>
+              <p className={clsx('text-[10px] font-bold uppercase tracking-wider', vixColor(liveVix))}>
+                {vixLabel(liveVix)}
+              </p>
+              {vixTime && (
+                <p className="text-[10px] text-slate-700 font-mono mt-0.5">{vixTime} ET</p>
+              )}
+            </>
+          ) : (
+            <>
+              <span className={clsx('text-2xl font-bold font-mono', vixColor(vixVal))}>
+                {vixVal > 0 ? fmt(vixVal) : '—'}
+              </span>
+              <p className={clsx('text-[10px] font-bold uppercase tracking-wider', vixColor(vixVal))}>
+                {vixVal > 0 ? vixLabel(vixVal) : ''}
+              </p>
+            </>
+          )}
         </div>
       </div>
 
@@ -131,8 +155,9 @@ function VIXTermPanel({ vix }: { vix: VIXTermStructure }) {
 
 // ── VIX History Chart ──────────────────────────────────────────────────────
 
-function VIXChartPanel({ history }: { history: VIXHistoryPoint[] }) {
+function VIXChartPanel({ history, liveVix }: { history: VIXHistoryPoint[]; liveVix: number | null }) {
   const latest = history[history.length - 1]?.close ?? 0;
+  const displayVix = liveVix ?? latest;
   const min20 = Math.min(...history.slice(-20).map((p) => p.close));
   const max20 = Math.max(...history.slice(-20).map((p) => p.close));
 
@@ -149,7 +174,7 @@ function VIXChartPanel({ history }: { history: VIXHistoryPoint[] }) {
             20d range {fmt(min20)} – {fmt(max20)}
           </p>
         </div>
-        <span className={clsx('text-lg font-bold font-mono', vixColor(latest))}>{fmt(latest)}</span>
+        <span className={clsx('text-lg font-bold font-mono', vixColor(displayVix))}>{fmt(displayVix)}</span>
       </div>
 
       <ResponsiveContainer width="100%" height={140}>
@@ -503,12 +528,15 @@ function GEXPanel({ gexList }: { gexList: GEXData[] }) {
 
 // ── Main Section ───────────────────────────────────────────────────────────
 
-const REFRESH_MS = 15 * 60 * 1000;
+const REFRESH_MS   = 15 * 60 * 1000;
+const VIX_POLL_MS  = 2_000;
 
 export default function OptionsSection() {
   const [data, setData]         = useState<OptionsFlowResponse | null>(null);
   const [loading, setLoading]   = useState(true);
   const [refreshing, setRefreshing] = useState(false);
+  const [liveVix,  setLiveVix]  = useState<number | null>(null);
+  const [vixTime,  setVixTime]  = useState<string>('');
 
   const load = async (silent = false) => {
     if (silent) setRefreshing(true);
@@ -523,6 +551,29 @@ export default function OptionsSection() {
       setRefreshing(false);
     }
   };
+
+  // Live VIX — same Yahoo Finance proxy used in Alerts
+  useEffect(() => {
+    let cancelled = false;
+    const poll = async () => {
+      if (cancelled) return;
+      try {
+        const r = await fetch('/api/quote?symbols=VIX', { cache: 'no-store' });
+        if (!r.ok || cancelled) return;
+        const d: Record<string, number> = await r.json();
+        if (cancelled) return;
+        if (d.VIX) {
+          setLiveVix(d.VIX);
+          setVixTime(new Date().toLocaleTimeString('en-US', {
+            timeZone: 'America/New_York', hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: false,
+          }));
+        }
+      } catch { /* silently ignore */ }
+    };
+    poll();
+    const id = setInterval(poll, VIX_POLL_MS);
+    return () => { cancelled = true; clearInterval(id); };
+  }, []);
 
   useEffect(() => {
     load(false);
@@ -572,18 +623,15 @@ export default function OptionsSection() {
         <>
           {/* VIX row */}
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-            {data?.vix && <VIXTermPanel vix={data.vix} />}
-            {data?.vixHistory.length ? <VIXChartPanel history={data.vixHistory} /> : null}
+            {data?.vix && <VIXTermPanel vix={data.vix} liveVix={liveVix} vixTime={vixTime} />}
+            {data?.vixHistory.length ? <VIXChartPanel history={data.vixHistory} liveVix={liveVix} /> : null}
           </div>
 
           {/* GEX */}
           {data?.gex?.length ? <GEXPanel gexList={data.gex} /> : null}
 
-          {/* Flow table */}
-          {data?.chains.length ? <FlowTable chains={data.chains} /> : null}
-
-          {/* Unusual activity */}
-          {data?.chains.length ? <UnusualTable chains={data.chains} /> : null}
+          {/* Unusual activity — hidden */}
+          {/* {data?.chains.length ? <UnusualTable chains={data.chains} /> : null} */}
 
           {!data?.vix && !data?.chains.length && (
             <div className="rounded-lg border border-slate-800/60 bg-[#111113] flex items-center justify-center h-40">
@@ -592,6 +640,12 @@ export default function OptionsSection() {
           )}
         </>
       )}
+
+      {/* DIX / GEX — always shown */}
+      <DixGexWidget />
+
+      {/* Flow table — nearest expiry */}
+      {data?.chains.length ? <FlowTable chains={data.chains} /> : null}
     </div>
   );
 }

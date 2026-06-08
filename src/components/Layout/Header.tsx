@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useMemo, useState } from 'react';
+import { PictureInPicture2 } from 'lucide-react';
 import type { Section } from './Sidebar';
 
 const SECTION_CODE: Record<Section, string> = {
@@ -13,7 +14,9 @@ const SECTION_CODE: Record<Section, string> = {
   earnings:    'ERN',
   options:     'OPT',
   gex:         'GEX',
+  alerts:      'ALT',
   journal:     'JRN',
+  crypto:      'BTC',
   notes:       'NTS',
 };
 
@@ -27,7 +30,9 @@ const SECTION_TITLE: Record<Section, string> = {
   earnings:    'EARNINGS CALENDAR',
   options:     'OPTION FLOW',
   gex:         'GEX INTELLIGENCE',
+  alerts:      'ALERTS',
   journal:     'TRADE JOURNAL',
+  crypto:      'BITCOIN CYCLE ADVISOR',
   notes:       'NOTES',
 };
 
@@ -41,7 +46,9 @@ const SECTION_SUB: Record<Section, string> = {
   earnings:    'Nasdaq · EPS estimate vs actual · ≥$2B cap',
   options:     'CBOE VIX · Yahoo Finance · SPY QQQ IWM GLD TLT',
   gex:         'GEXbot Classic · SPX NDX · 0DTE · Breakout Probability · Gamma Flip',
+  alerts:      'Alpaca · Benzinga · Price Alerts · Live News',
   journal:     'Weekly recap · Day-by-day bias · Screenshots · Reversal tags',
+  crypto:      'MVRV · SOPR · Puell Multiple · LTH/STH Supply · Liquidation · CheckOnChain',
   notes:       'Local storage · private',
 };
 
@@ -146,6 +153,23 @@ const ALERT_STYLE: Record<AlertLevel, { bar: string; title: string; body: string
   },
 };
 
+// ── Earnings alerts (written by EarningsSection via localStorage) ─────────────
+
+interface EarningsAlertEntry { symbol: string; name: string; date: string; time: string; }
+interface EarningsAlertsCache { date: string; today: EarningsAlertEntry[]; tomorrow: EarningsAlertEntry[]; }
+
+const EARNINGS_ALERTS_KEY = 'earnings_today_alerts_v1';
+
+function readEarningsAlerts(todayStr: string): { today: EarningsAlertEntry[]; tomorrow: EarningsAlertEntry[] } {
+  try {
+    const raw = localStorage.getItem(EARNINGS_ALERTS_KEY);
+    if (!raw) return { today: [], tomorrow: [] };
+    const cache: EarningsAlertsCache = JSON.parse(raw);
+    if (cache.date !== todayStr) return { today: [], tomorrow: [] };
+    return { today: cache.today ?? [], tomorrow: cache.tomorrow ?? [] };
+  } catch { return { today: [], tomorrow: [] }; }
+}
+
 // ── Component ────────────────────────────────────────────────────────────────
 
 interface Props {
@@ -156,6 +180,8 @@ export default function Header({ activeSection }: Props) {
   const [clock, setClock]   = useState('');
   const [date, setDate]     = useState('');
   const [todayET, setTodayET] = useState('');
+  const [earningsAlerts, setEarningsAlerts] = useState<{ today: EarningsAlertEntry[]; tomorrow: EarningsAlertEntry[] }>({ today: [], tomorrow: [] });
+  const [widgetState, setWidgetState] = useState<'idle' | 'launching' | 'error'>('idle');
 
   useEffect(() => {
     const tick = () => {
@@ -171,9 +197,37 @@ export default function Header({ activeSection }: Props) {
       setTodayET(new Intl.DateTimeFormat('en-CA', { timeZone: 'America/New_York' }).format(now));
     };
     tick();
-    const id = setInterval(tick, 60_000); // recheck every minute
+    const id = setInterval(tick, 60_000);
     return () => clearInterval(id);
   }, []);
+
+  // Re-read earnings alerts from localStorage cache (written by EarningsSection)
+  useEffect(() => {
+    if (!todayET) return;
+    const read = () => setEarningsAlerts(readEarningsAlerts(todayET));
+    read();
+    window.addEventListener('storage', read);
+    const id = setInterval(read, 30_000);
+    return () => { window.removeEventListener('storage', read); clearInterval(id); };
+  }, [todayET]);
+
+  async function launchWidget() {
+    setWidgetState('launching');
+    try {
+      const r = await fetch('/api/launch-widget', { method: 'POST' });
+      if (r.ok) {
+        setWidgetState('idle');
+      } else {
+        const j = await r.json().catch(() => ({}));
+        console.error('Widget launch failed:', j.error);
+        setWidgetState('error');
+        setTimeout(() => setWidgetState('idle'), 3000);
+      }
+    } catch {
+      setWidgetState('error');
+      setTimeout(() => setWidgetState('idle'), 3000);
+    }
+  }
 
   const alerts = useMemo<DayAlert[]>(() => {
     if (!todayET) return [];
@@ -218,17 +272,67 @@ export default function Header({ activeSection }: Props) {
         );
       })}
 
-      {/* Section bar */}
-      <div className="flex items-center gap-3 px-4 py-2">
-        <span className="text-[10px] font-bold text-amber-700 border border-amber-800/60 px-1.5 py-0.5 uppercase tracking-wider">
-          {SECTION_CODE[activeSection]}
-        </span>
-        <div>
-          <h1 className="text-sm font-bold text-amber-300 uppercase tracking-widest leading-none">
-            {SECTION_TITLE[activeSection]}
-          </h1>
-          <p className="text-[10px] text-slate-600 mt-0.5 uppercase tracking-wider">{SECTION_SUB[activeSection]}</p>
+      {/* Earnings watchlist alerts */}
+      {earningsAlerts.today.length > 0 && (
+        <div className="flex items-start gap-3 px-4 py-2.5 bg-emerald-950/60 border-b border-emerald-700/30">
+          <span className="relative flex h-2 w-2 shrink-0 mt-1">
+            <span className="absolute inline-flex h-full w-full rounded-full opacity-75 bg-emerald-400 animate-ping" />
+            <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-400" />
+          </span>
+          <div className="flex-1 min-w-0">
+            <p className="text-[11px] uppercase tracking-widest font-mono font-bold text-emerald-300 leading-snug">
+              📊 {earningsAlerts.today.map((a) => a.symbol).join(' · ')} — EARNINGS TODAY
+            </p>
+            <p className="text-[10px] mt-0.5 font-mono text-emerald-500/70">
+              {earningsAlerts.today.map((a) => `${a.symbol} ${a.time === 'pre-market' ? '(pre-mkt)' : a.time === 'after-hours' ? '(AH)' : ''}`).join(' · ')} · Watchlisted
+            </p>
+          </div>
         </div>
+      )}
+      {earningsAlerts.tomorrow.length > 0 && (
+        <div className="flex items-start gap-3 px-4 py-2.5 bg-emerald-950/40 border-b border-emerald-800/20">
+          <span className="relative flex h-2 w-2 shrink-0 mt-1">
+            <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-600" />
+          </span>
+          <div className="flex-1 min-w-0">
+            <p className="text-[11px] uppercase tracking-widest font-mono font-bold text-emerald-400/80 leading-snug">
+              📊 {earningsAlerts.tomorrow.map((a) => a.symbol).join(' · ')} — EARNINGS TOMORROW
+            </p>
+            <p className="text-[10px] mt-0.5 font-mono text-emerald-600/70">
+              {earningsAlerts.tomorrow.map((a) => `${a.symbol} ${a.time === 'pre-market' ? '(pre-mkt)' : a.time === 'after-hours' ? '(AH)' : ''}`).join(' · ')} · Watchlisted
+            </p>
+          </div>
+        </div>
+      )}
+
+      {/* Section bar */}
+      <div className="flex items-center justify-between gap-3 px-4 py-2">
+        <div className="flex items-center gap-3">
+          <span className="text-[10px] font-bold text-amber-700 border border-amber-800/60 px-1.5 py-0.5 uppercase tracking-wider">
+            {SECTION_CODE[activeSection]}
+          </span>
+          <div>
+            <h1 className="text-sm font-bold text-amber-300 uppercase tracking-widest leading-none">
+              {SECTION_TITLE[activeSection]}
+            </h1>
+            <p className="text-[10px] text-slate-600 mt-0.5 uppercase tracking-wider">{SECTION_SUB[activeSection]}</p>
+          </div>
+        </div>
+
+        {/* Widget launcher */}
+        <button
+          onClick={launchWidget}
+          disabled={widgetState === 'launching'}
+          title="Launch SPX / NDX / VIX floating widget"
+          className={
+            widgetState === 'error'
+              ? 'flex items-center gap-1.5 px-2.5 py-1 rounded border text-[10px] font-mono font-bold uppercase tracking-wider bg-red-500/10 border-red-500/30 text-red-400'
+              : 'flex items-center gap-1.5 px-2.5 py-1 rounded border text-[10px] font-mono font-bold uppercase tracking-wider border-amber-800/40 text-amber-700 hover:bg-amber-500/10 hover:text-amber-400 hover:border-amber-500/40 transition-colors disabled:opacity-40'
+          }
+        >
+          <PictureInPicture2 className="w-3 h-3" />
+          {widgetState === 'launching' ? 'Launching…' : widgetState === 'error' ? 'Failed' : 'Widget'}
+        </button>
       </div>
     </header>
   );

@@ -220,24 +220,23 @@ export interface GexbotMajors {
   net_gex_oi: number;
 }
 
-export interface GexbotInstrument {
-  ticker: string;
-  majors: GexbotMajors | null;
-  breakoutProb: number;
-  regime: 'positive' | 'negative';
-  distToFlipPts: number;
-  aboveFlip: boolean;
+export interface GexbotModelData {
+  full: GexbotMajors | null;  // volume-weighted
+  zero: GexbotMajors | null;  // OI-weighted
 }
 
-export interface GexbotStockRow {
+export interface GexbotIndex {
+  ticker: string;
+  label: string;
+  classic: GexbotModelData;
+  state:   GexbotModelData;
+}
+
+export interface GexbotStock {
   ticker: string;
   name: string;
-  ndxWeight: number;       // % weight in NDX
-  majors: GexbotMajors | null;
-  breakoutProb: number;
-  regime: 'positive' | 'negative';
-  distToFlipPts: number;
-  aboveFlip: boolean;
+  ndxWeight: number;
+  classic: GexbotModelData;
 }
 
 export interface GexbotAggregateScore {
@@ -248,8 +247,8 @@ export interface GexbotAggregateScore {
 }
 
 export interface GexbotResponse {
-  instruments: GexbotInstrument[];
-  stocks: GexbotStockRow[];
+  indices: GexbotIndex[];
+  stocks: GexbotStock[];
   aggregate: GexbotAggregateScore;
   fetchedAt: string;
   error?: string;

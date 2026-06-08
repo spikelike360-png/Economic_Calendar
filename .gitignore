@@ -14,13 +14,26 @@ build/
 .env
 .env.local
 .env*.local
+.env.vercel
 
 # vercel
 .vercel
 
 # local dev
 dev.log
+dev-server.log
+*.log
 .claude/
+
+# transcripts / data / scratch
+*.srt
+data/
+widget/
+gex-dashboard-deploy/
+options-gex-dashboard.html
+test_checkonchain.mjs
+transcribe_videos.py
+transcribe_log.txt
 
 # misc
 .DS_Store

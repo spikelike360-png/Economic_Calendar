@@ -6,6 +6,8 @@ import { clsx } from 'clsx';
 import type { MacroMetric, MacroValue, MetricsResponse, Trend } from '@/lib/types';
 import CurrencyBadge from '@/components/ui/CurrencyBadge';
 import MetricChartModal from './MetricChartModal';
+import MacroWidgets from './MacroWidgets';
+import MonetaryPolicyDirector from './MonetaryPolicyDirector';
 
 const REFRESH_MS = 60 * 60 * 1000;
 
@@ -224,6 +226,12 @@ export default function MetricsSection() {
       <p className="text-xs text-slate-700 text-center">
         USD via FRED (St. Louis Fed) · EUR/GBP/JPY/CAD/AUD via Trading Economics · Eastern Time
       </p>
+
+      {!loading && data?.metrics && data.metrics.length > 0 && (
+        <MonetaryPolicyDirector metrics={data.metrics} />
+      )}
+
+      <MacroWidgets />
 
       {modal && (
         <MetricChartModal
