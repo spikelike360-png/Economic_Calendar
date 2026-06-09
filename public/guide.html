@@ -1,0 +1,1275 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Macro Dashboard — Beginner's Guide</title>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+<style>
+  :root {
+    --bg:      #09090b;
+    --bg2:     #0d0d12;
+    --bg3:     #111118;
+    --border:  #27272a;
+    --amber:   #f59e0b;
+    --amber2:  #fbbf24;
+    --text:    #e4e4e7;
+    --muted:   #71717a;
+    --dim:     #3f3f46;
+    --green:   #34d399;
+    --red:     #f87171;
+    --blue:    #60a5fa;
+    --purple:  #a78bfa;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { background: var(--bg); color: var(--text); font-family: 'Segoe UI', system-ui, sans-serif; line-height: 1.6; }
+  a { color: var(--amber); text-decoration: none; }
+
+  /* NAV */
+  nav {
+    position: sticky; top: 0; z-index: 100;
+    background: rgba(9,9,11,0.95); backdrop-filter: blur(8px);
+    border-bottom: 1px solid var(--border);
+    display: flex; align-items: center; gap: 8px; padding: 10px 24px;
+    flex-wrap: wrap;
+  }
+  nav .brand { font-weight: 800; color: var(--amber); font-size: 13px; letter-spacing: 2px; text-transform: uppercase; margin-right: 12px; }
+  nav a { color: var(--muted); font-size: 12px; font-weight: 600; letter-spacing: 1px; text-transform: uppercase; padding: 4px 8px; border-radius: 4px; transition: .15s; }
+  nav a:hover { color: var(--amber); background: rgba(245,158,11,.1); }
+  .lang-toggle {
+    margin-left: auto;
+    display: flex; background: #18181b; border: 1px solid var(--border); border-radius: 6px; overflow: hidden;
+  }
+  .lang-btn { padding: 5px 14px; font-size: 11px; font-weight: 700; letter-spacing: 1px; cursor: pointer; border: none; background: transparent; color: var(--muted); transition: .15s; }
+  .lang-btn.active { background: rgba(245,158,11,.2); color: var(--amber); }
+
+  /* LAYOUT */
+  .container { max-width: 960px; margin: 0 auto; padding: 0 20px; }
+  section { padding: 64px 0 32px; }
+  section + section { border-top: 1px solid var(--border); }
+
+  /* HERO */
+  .hero { padding: 72px 0 48px; text-align: center; }
+  .hero h1 { font-size: clamp(28px, 5vw, 52px); font-weight: 900; letter-spacing: -1px; color: var(--amber); margin-bottom: 12px; }
+  .hero p { font-size: 16px; color: var(--muted); max-width: 580px; margin: 0 auto 24px; }
+  .hero .badge { display: inline-block; background: rgba(245,158,11,.12); border: 1px solid rgba(245,158,11,.3); color: var(--amber2); font-size: 11px; font-weight: 700; letter-spacing: 2px; text-transform: uppercase; padding: 4px 12px; border-radius: 20px; }
+
+  /* SECTION TITLES */
+  .sec-label { font-size: 10px; font-weight: 700; letter-spacing: 3px; text-transform: uppercase; color: var(--amber); margin-bottom: 8px; }
+  h2 { font-size: clamp(22px, 3vw, 32px); font-weight: 800; margin-bottom: 16px; letter-spacing: -.5px; }
+  h3 { font-size: 16px; font-weight: 700; margin-bottom: 8px; }
+  p { color: #a1a1aa; margin-bottom: 12px; font-size: 14px; }
+  p strong { color: var(--text); }
+
+  /* CARDS */
+  .card { background: var(--bg2); border: 1px solid var(--border); border-radius: 12px; padding: 20px; margin-bottom: 16px; }
+  .card-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 16px; margin-bottom: 24px; }
+  .page-card { background: var(--bg2); border: 1px solid var(--border); border-radius: 12px; padding: 20px; transition: .2s; }
+  .page-card:hover { border-color: var(--amber); background: var(--bg3); }
+  .page-card .icon { font-size: 28px; margin-bottom: 10px; }
+  .page-card h3 { color: var(--amber2); font-size: 13px; letter-spacing: 2px; text-transform: uppercase; margin-bottom: 6px; }
+  .page-card p { font-size: 13px; color: var(--muted); margin: 0; }
+
+  /* CHART BOXES */
+  .chart-box { background: var(--bg2); border: 1px solid var(--border); border-radius: 12px; padding: 20px; margin-bottom: 24px; }
+  .chart-box h3 { font-size: 13px; font-weight: 700; color: var(--amber2); letter-spacing: 1px; text-transform: uppercase; margin-bottom: 4px; }
+  .chart-box .chart-sub { font-size: 12px; color: var(--muted); margin-bottom: 16px; }
+  .chart-wrap { position: relative; height: 260px; }
+
+  /* EVENT TABLE */
+  .event-grid { display: grid; gap: 12px; margin-bottom: 24px; }
+  .event-card { background: var(--bg2); border: 1px solid var(--border); border-radius: 10px; padding: 16px; display: grid; grid-template-columns: 1fr auto; gap: 8px; align-items: start; }
+  .event-card h3 { font-size: 14px; font-weight: 700; color: var(--text); margin: 0 0 4px; }
+  .event-card p { font-size: 12px; color: var(--muted); margin: 0; }
+  .impact-badges { display: flex; flex-direction: column; gap: 4px; align-items: flex-end; }
+  .badge-sm { font-size: 10px; font-weight: 700; letter-spacing: 1px; text-transform: uppercase; padding: 2px 8px; border-radius: 4px; white-space: nowrap; }
+  .badge-red    { background: rgba(248,113,113,.15); color: #f87171; border: 1px solid rgba(248,113,113,.3); }
+  .badge-green  { background: rgba(52,211,153,.15);  color: #34d399;  border: 1px solid rgba(52,211,153,.3); }
+  .badge-amber  { background: rgba(245,158,11,.15);  color: var(--amber2); border: 1px solid rgba(245,158,11,.3); }
+  .badge-blue   { background: rgba(96,165,250,.15);  color: #60a5fa;  border: 1px solid rgba(96,165,250,.3); }
+  .badge-high   { background: rgba(248,113,113,.2);  color: #fca5a5;  border: 1px solid rgba(248,113,113,.4); font-size: 9px; }
+  .badge-medium { background: rgba(245,158,11,.2);   color: #fde68a;  border: 1px solid rgba(245,158,11,.4);  font-size: 9px; }
+
+  /* RULE BOXES */
+  .rule-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin: 16px 0 24px; }
+  .rule-box { background: var(--bg3); border-radius: 8px; padding: 14px 16px; }
+  .rule-box .rule-title { font-size: 11px; font-weight: 700; letter-spacing: 2px; text-transform: uppercase; margin-bottom: 8px; }
+  .rule-box ul { padding-left: 16px; }
+  .rule-box li { font-size: 12px; color: var(--muted); margin-bottom: 4px; }
+  .rule-box li strong { color: var(--text); }
+  .green-title { color: var(--green); }
+  .red-title   { color: var(--red);   }
+
+  /* YIELD CURVE */
+  .yield-btns { display: flex; gap: 8px; margin-bottom: 12px; flex-wrap: wrap; }
+  .yield-btn { padding: 6px 14px; border-radius: 6px; border: 1px solid var(--border); background: transparent; color: var(--muted); font-size: 11px; font-weight: 700; letter-spacing: 1px; text-transform: uppercase; cursor: pointer; transition: .15s; }
+  .yield-btn.active { background: rgba(245,158,11,.2); border-color: rgba(245,158,11,.5); color: var(--amber2); }
+  .yield-desc { font-size: 12px; color: var(--muted); padding: 10px 14px; background: var(--bg3); border-radius: 6px; margin-top: 10px; }
+
+  /* IMPACT TABLE */
+  .impact-table { width: 100%; border-collapse: collapse; font-size: 12px; margin-bottom: 24px; }
+  .impact-table th { text-align: left; padding: 8px 12px; border-bottom: 1px solid var(--border); color: var(--muted); font-size: 10px; letter-spacing: 2px; text-transform: uppercase; font-weight: 600; }
+  .impact-table td { padding: 8px 12px; border-bottom: 1px solid #1c1c1f; color: var(--muted); }
+  .impact-table tr:hover td { background: var(--bg3); }
+  .up   { color: var(--green); font-weight: 700; }
+  .down { color: var(--red);   font-weight: 700; }
+  .neu  { color: var(--muted); }
+
+  /* DIVIDER */
+  .divider { height: 1px; background: var(--border); margin: 32px 0; }
+
+  /* CHEATSHEET */
+  .cheat-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 10px; }
+  .cheat-item { background: var(--bg3); border: 1px solid var(--border); border-radius: 8px; padding: 12px; }
+  .cheat-item .term { font-size: 12px; font-weight: 700; color: var(--amber2); margin-bottom: 4px; }
+  .cheat-item .def  { font-size: 11px; color: var(--muted); }
+
+  /* CALLOUT */
+  .callout { border-left: 3px solid var(--amber); background: rgba(245,158,11,.06); border-radius: 0 8px 8px 0; padding: 12px 16px; margin: 16px 0; font-size: 13px; color: var(--muted); }
+  .callout strong { color: var(--amber2); }
+
+  /* HIDDEN for lang */
+  [data-en], [data-bg] { display: none; }
+  body.lang-en [data-en] { display: revert; }
+  body.lang-bg [data-bg] { display: revert; }
+
+  @media (max-width: 640px) {
+    .rule-grid { grid-template-columns: 1fr; }
+    nav a { display: none; }
+    nav a.always { display: inline; }
+  }
+</style>
+</head>
+<body class="lang-en">
+
+<!-- NAV -->
+<nav>
+  <span class="brand">📊 Macro Guide</span>
+  <a href="#dashboard" class="always" data-en>Dashboard Tour</a>
+  <a href="#dashboard" class="always" data-bg>Тур на Таблото</a>
+  <a href="#rates" data-en>Interest Rates</a>
+  <a href="#rates" data-bg>Лихвени %</a>
+  <a href="#calendar" data-en>Economic Calendar</a>
+  <a href="#calendar" data-bg>Ик. Календар</a>
+  <a href="#cheatsheet" data-en>Cheat Sheet</a>
+  <a href="#cheatsheet" data-bg>Речник</a>
+  <div class="lang-toggle">
+    <button class="lang-btn active" onclick="setLang('en')">EN</button>
+    <button class="lang-btn" onclick="setLang('bg')">БГ</button>
+  </div>
+</nav>
+
+<!-- HERO -->
+<div class="hero">
+  <div class="container">
+    <div class="badge" data-en>Beginner's Guide to the Macro Terminal</div>
+    <div class="badge" data-bg>Ръководство за Начинаещи — Macro Terminal</div>
+    <h1 data-en>Understanding the Dashboard</h1>
+    <h1 data-bg>Разбиране на Таблото</h1>
+    <p data-en>A complete guide to every page, every chart, and every economic event — explained from zero. No prior trading or economics knowledge required.</p>
+    <p data-bg>Пълно ръководство за всяка страница, всяка графика и всяко икономическо събитие — обяснено от нулата. Не се изисква предварителни познания по търговия или икономика.</p>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════════════
+     SECTION 1 — DASHBOARD TOUR
+═══════════════════════════════════════════════════════════ -->
+<section id="dashboard">
+<div class="container">
+  <div class="sec-label" data-en>Section 1</div>
+  <div class="sec-label" data-bg>Раздел 1</div>
+  <h2 data-en>Dashboard Tour — What Every Page Does</h2>
+  <h2 data-bg>Тур на Таблото — Какво Прави Всяка Страница</h2>
+  <p data-en>The dashboard has 10 pages. Here's what each one shows and why it matters for understanding markets.</p>
+  <p data-bg>Таблото има 10 страници. Ето какво показва всяка и защо е важно за разбирането на пазарите.</p>
+
+  <div class="card-grid">
+
+    <!-- 1 Calendar -->
+    <div class="page-card">
+      <div class="icon">📅</div>
+      <h3 data-en>1 · Economic Calendar</h3>
+      <h3 data-bg>1 · Икономически Календар</h3>
+      <p data-en>Shows every scheduled economic news release for the week — jobs data, inflation, central bank decisions. Each event has an impact rating (red = market-moving). When big news drops, markets can move 1–3% in seconds.</p>
+      <p data-bg>Показва всички планирани икономически новини за седмицата — данни за заетостта, инфлация, решения на централните банки. Всяко събитие има оценка за въздействие (червено = пазарно движение). При важни новини пазарите могат да се движат с 1–3% за секунди.</p>
+    </div>
+
+    <!-- 2 COT + Seasonality -->
+    <div class="page-card">
+      <div class="icon">📊</div>
+      <h3 data-en>2 · COT Report & Seasonality</h3>
+      <h3 data-bg>2 · COT Доклад & Сезонност</h3>
+      <p data-en><strong>COT:</strong> Every week, the US government publishes how much big institutions (hedge funds, banks) are betting on or against currencies. If pros are heavily short EUR, that's a warning sign. <strong>Seasonality:</strong> Historically, certain months are bullish or bearish for assets. Like how stocks often dip in September.</p>
+      <p data-bg><strong>COT:</strong> Всяка седмица правителството на САЩ публикува колко залагат големите институции (хеджфондове, банки) за или против валути. Ако професионалистите са силно в шорт на EUR, това е предупредителен сигнал. <strong>Сезонност:</strong> Исторически, определени месеци са бичи или мечи за активите. Например акциите често падат през септември.</p>
+    </div>
+
+    <!-- 3 Macro -->
+    <div class="page-card">
+      <div class="icon">🏦</div>
+      <h3 data-en>3 · Macro Metrics</h3>
+      <h3 data-bg>3 · Макро Метрики</h3>
+      <p data-en>Live data for 6 currencies: interest rates, inflation, unemployment, and GDP growth. This is the "big picture" of each economy. A country with high rates and falling inflation = strong currency. Low rates and rising inflation = weak currency.</p>
+      <p data-bg>Данни в реално за 6 валути: лихвени проценти, инфлация, безработица и ръст на БВП. Това е "голямата картина" на всяка икономика. Страна с високи лихви и падаща инфлация = силна валута. Ниски лихви и нарастваща инфлация = слаба валута.</p>
+    </div>
+
+    <!-- 4 Options + GEX -->
+    <div class="page-card">
+      <div class="icon">⚙️</div>
+      <h3 data-en>4 · Options Flow & GEX</h3>
+      <h3 data-bg>4 · Опционен Поток & GEX</h3>
+      <p data-en><strong>Options:</strong> Tracks the VIX (fear index) and unusual options bets — when smart money buys big put options, they expect a drop. <strong>GEX (Gamma Exposure):</strong> Shows where market makers are forced to buy or sell. High GEX = market gets "pinned" near a price. Low GEX = wild swings possible.</p>
+      <p data-bg><strong>Опции:</strong> Следи VIX (индекс на страха) и необичайни залози с опции — когато умните пари купуват големи пут опции, те очакват спад. <strong>GEX (Гама Експозиция):</strong> Показва къде маркет мейкърите са принудени да купуват или продават. Висок GEX = пазарът се "заковава" близо до цена. Нисък GEX = възможни са диви колебания.</p>
+    </div>
+
+    <!-- 5 Crypto -->
+    <div class="page-card">
+      <div class="icon">₿</div>
+      <h3 data-en>5 · Bitcoin Cycle Advisor</h3>
+      <h3 data-bg>5 · Bitcoin Цикличен Съветник</h3>
+      <p data-en>Uses on-chain data (actual blockchain activity) to score where Bitcoin is in its 4-year market cycle. Score 60–80 = historically good buying zone ("Deep Value"). Score 0–25 = overvalued, risky to buy. Real data from CheckOnChain — MVRV ratio, miner revenue, market sentiment.</p>
+      <p data-bg>Използва on-chain данни (реална блокчейн активност) за оценка на позицията на Bitcoin в 4-годишния му пазарен цикъл. Резултат 60–80 = исторически добра зона за купуване ("Deep Value"). Резултат 0–25 = надценен, рисково е да се купува. Реални данни от CheckOnChain — MVRV съотношение, приходи на майнери, пазарен сентимент.</p>
+    </div>
+
+    <!-- 6 News -->
+    <div class="page-card">
+      <div class="icon">📰</div>
+      <h3 data-en>6 · News Feed</h3>
+      <h3 data-bg>6 · Новинарски Поток</h3>
+      <p data-en>Live headlines from Yahoo Finance, CNBC, and MarketWatch. Markets react to news instantly. The skill is learning which news matters and which is noise. Fed comments, war escalations, and earnings surprises = market-moving. Random analyst opinions = usually noise.</p>
+      <p data-bg>Заглавия в реално от Yahoo Finance, CNBC и MarketWatch. Пазарите реагират на новини мигновено. Умението е да се научи кои новини имат значение и кои са шум. Коментари на Фед, военни ескалации и изненади при печалби = пазарно движение. Случайни мнения на анализатори = обикновено шум.</p>
+    </div>
+
+    <!-- 7 Earnings -->
+    <div class="page-card">
+      <div class="icon">💰</div>
+      <h3 data-en>7 · Earnings Calendar</h3>
+      <h3 data-bg>7 · Календар на Печалбите</h3>
+      <p data-en>Every quarter, companies report their profits. If Apple earns more than analysts expected = stock jumps. Less than expected = stock drops. "EPS" (Earnings Per Share) is the key number. This page shows upcoming reports and actual vs. estimated results.</p>
+      <p data-bg>Всяко тримесечие компаниите отчитат печалбите си. Ако Apple спечели повече от очакваното от анализаторите = акцията скача. По-малко от очакваното = акцията пада. "EPS" (Печалба на Акция) е ключовото число. Тази страница показва предстоящи отчети и реални спрямо прогнозни резултати.</p>
+    </div>
+
+    <!-- 8 Journal -->
+    <div class="page-card">
+      <div class="icon">📓</div>
+      <h3 data-en>8 · Journal, Tasks & Notes</h3>
+      <h3 data-bg>8 · Дневник, Задачи & Бележки</h3>
+      <p data-en>Three tabs: <strong>Trade Journal</strong> — weekly recap of trades, bias (bullish/bearish), outcomes. <strong>Task Manager</strong> — daily to-do list with priorities and day navigation. <strong>Notes</strong> — free-form private notes. All stored locally in the browser.</p>
+      <p data-bg>Три раздела: <strong>Търговски Дневник</strong> — седмично обобщение на сделките, предпочитание (бичи/мечи), резултати. <strong>Мениджър на Задачи</strong> — ежедневен списък със задачи с приоритети. <strong>Бележки</strong> — свободен формат. Всичко се съхранява локално в браузъра.</p>
+    </div>
+
+    <!-- 9 Subs -->
+    <div class="page-card">
+      <div class="icon">💳</div>
+      <h3 data-en>9 · Subscriptions</h3>
+      <h3 data-bg>9 · Абонаменти</h3>
+      <p data-en>Personal finance tracker for all monthly subscriptions. Add any recurring payment — TradingView, ChatGPT, Netflix, etc. See total monthly cost, annual cost, and spending by category. Stores everything locally — never sent anywhere.</p>
+      <p data-bg>Личен финансов тракер за всички месечни абонаменти. Добавете всяко повтарящо се плащане — TradingView, ChatGPT, Netflix и т.н. Вижте общите месечни разходи, годишни разходи и харчене по категория. Съхранява всичко локално — никога не се изпраща никъде.</p>
+    </div>
+
+    <!-- 10 Alerts -->
+    <div class="page-card">
+      <div class="icon">🔔</div>
+      <h3 data-en>10 · Alerts</h3>
+      <h3 data-bg>10 · Известия</h3>
+      <p data-en>Live market news and price alerts. Connects to Alpaca and Benzinga for real-time headlines and unusual market activity. Set price alerts for any asset — get notified when it hits your target level.</p>
+      <p data-bg>Пазарни новини и ценови известия в реално. Свързва се с Alpaca и Benzinga за заглавия в реално и необичайна пазарна активност. Задайте ценови известия за всеки актив — получете известие, когато достигне желаното ниво.</p>
+    </div>
+
+  </div><!-- /card-grid -->
+</div>
+</section>
+
+<!-- ═══════════════════════════════════════════════════════════
+     SECTION 2 — INTEREST RATES
+═══════════════════════════════════════════════════════════ -->
+<section id="rates">
+<div class="container">
+  <div class="sec-label" data-en>Section 2</div>
+  <div class="sec-label" data-bg>Раздел 2</div>
+  <h2 data-en>How Interest Rates Drive Everything</h2>
+  <h2 data-bg>Как Лихвените Проценти Движат Всичко</h2>
+
+  <p data-en>Interest rates are the single most important variable in global finance. The US Federal Reserve (Fed) sets the benchmark rate. Every other asset — stocks, bonds, real estate, gold, crypto — reacts to where rates are and where they're going.</p>
+  <p data-bg>Лихвените проценти са най-важната променлива в глобалните финанси. Американският Федерален Резерв (Фед) определя базовия лихвен процент. Всеки друг актив — акции, облигации, недвижими имоти, злато, криптовалута — реагира на нивото на лихвите и накъде се движат.</p>
+
+  <div class="callout" data-en>
+    <strong>Simple analogy:</strong> Interest rates are the "price of money." When money is cheap (low rates), people borrow and invest everywhere — stocks, crypto, real estate all go up. When money is expensive (high rates), people park it in safe savings accounts and sell risky assets.
+  </div>
+  <div class="callout" data-bg>
+    <strong>Проста аналогия:</strong> Лихвените проценти са "цената на парите." Когато парите са евтини (ниски лихви), хората вземат назаем и инвестират навсякъде — акции, крипто, недвижими имоти се покачват. Когато парите са скъпи (високи лихви), хората ги паркират в безопасни спестовни сметки и продават рискови активи.
+  </div>
+
+  <!-- ── FED POLICY CYCLE ANIMATION ── -->
+  <div class="chart-box" style="margin-bottom:28px">
+    <h3 data-en>🔄 The Fed Policy Cycle — Live Animation</h3>
+    <h3 data-bg>🔄 Цикълът на Политиката на Фед — Жива Анимация</h3>
+    <div class="chart-sub" data-en>Watch how high inflation forces rate hikes → which raise unemployment → which forces rate cuts → which lets inflation creep back up. This cycle repeats every 5–10 years.</div>
+    <div class="chart-sub" data-bg>Вижте как високата инфлация принуждава повишаване на лихвите → което увеличава безработицата → което принуждава намаления на лихвите → което позволява на инфлацията да се върне. Цикълът се повтаря на всеки 5–10 години.</div>
+
+    <div style="display:flex;gap:8px;align-items:center;margin-bottom:20px;flex-wrap:wrap">
+      <button id="cyclePlayBtn" class="yield-btn active" onclick="cyclePauseToggle()" style="min-width:88px">▶ Play</button>
+      <button class="yield-btn" onclick="cycleManualStep()"><span data-en>→ Next Phase</span><span data-bg>→ Следваща Фаза</span></button>
+      <span id="cyclePhaseLbl" style="font-size:10px;color:var(--muted);margin-left:6px;font-weight:700;letter-spacing:2px;text-transform:uppercase">PHASE 1 / 4</span>
+    </div>
+
+    <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-bottom:20px">
+      <div style="text-align:center">
+        <svg id="gRate" viewBox="0 0 160 128" style="width:100%;max-width:160px;display:block;margin:0 auto"></svg>
+        <div style="font-size:9px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:var(--amber)">FED RATE</div>
+        <div id="gRateVal" style="font-size:clamp(15px,3vw,24px);font-weight:900;margin-top:2px;font-family:monospace;color:var(--text)">—</div>
+      </div>
+      <div style="text-align:center">
+        <svg id="gInfl" viewBox="0 0 160 128" style="width:100%;max-width:160px;display:block;margin:0 auto"></svg>
+        <div style="font-size:9px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:#f87171"><span data-en>INFLATION</span><span data-bg>ИНФЛАЦИЯ</span></div>
+        <div id="gInflVal" style="font-size:clamp(15px,3vw,24px);font-weight:900;margin-top:2px;font-family:monospace;color:var(--text)">—</div>
+      </div>
+      <div style="text-align:center">
+        <svg id="gUnemp" viewBox="0 0 160 128" style="width:100%;max-width:160px;display:block;margin:0 auto"></svg>
+        <div style="font-size:9px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:#34d399"><span data-en>UNEMPLOYED</span><span data-bg>БЕЗРАБОТНИ</span></div>
+        <div id="gUnempVal" style="font-size:clamp(15px,3vw,24px);font-weight:900;margin-top:2px;font-family:monospace;color:var(--text)">—</div>
+      </div>
+    </div>
+
+    <!-- Cycle line chart — synced with gauges -->
+    <div style="position:relative;height:195px;margin-bottom:20px">
+      <canvas id="cycleLineChart"></canvas>
+    </div>
+
+    <div id="cycleCard" style="background:var(--bg3);border:1px solid var(--border);border-radius:10px;padding:14px 18px;transition:border-color .4s;min-height:90px">
+      <div id="cycleName" style="font-size:12px;font-weight:900;letter-spacing:1.5px;text-transform:uppercase;margin-bottom:6px"></div>
+      <div id="cycleDesc" style="font-size:13px;color:#71717a;line-height:1.65"></div>
+    </div>
+
+    <div id="cycleFlow" style="display:flex;align-items:center;justify-content:center;gap:6px;margin-top:14px;flex-wrap:wrap;min-height:28px"></div>
+  </div>
+
+  <!-- Chart 1: Fed Funds Rate History -->
+  <div class="chart-box">
+    <h3 data-en>US Federal Funds Rate — 2015 to 2024</h3>
+    <h3 data-bg>Лихвен Процент на Фед — 2015 до 2024</h3>
+    <div class="chart-sub" data-en>The Fed raised rates from 0% to 5.5% in the fastest hiking cycle in 40 years (2022–2023). This crushed bonds, slowed stocks, and made the dollar very strong.</div>
+    <div class="chart-sub" data-bg>Фед повиши лихвите от 0% до 5.5% в най-бързия цикъл на покачване от 40 години (2022–2023). Това смачка облигациите, забави акциите и направи долара много силен.</div>
+    <div class="chart-wrap"><canvas id="chartRates"></canvas></div>
+  </div>
+
+  <!-- Chart 2: Rates vs S&P 500 -->
+  <div class="chart-box">
+    <h3 data-en>Rate Hikes vs S&P 500 — What Actually Happens</h3>
+    <h3 data-bg>Повишаване на Лихви срещу S&P 500 — Какво Реално Се Случва</h3>
+    <div class="chart-sub" data-en>Counterintuitive: stocks often rise DURING rate hike cycles because the economy is strong. They crash when hikes go TOO far and break the economy. The damage shows up 12–18 months later.</div>
+    <div class="chart-sub" data-bg>Контраинтуитивно: акциите често се покачват ПО ВРЕМЕ на цикли на повишаване на лихвите, защото икономиката е силна. Те се сриват, когато покачванията отидат ТВЪРДЕ далеч и счупят икономиката. Щетите се появяват 12–18 месеца по-късно.</div>
+    <div class="chart-wrap"><canvas id="chartSP"></canvas></div>
+  </div>
+
+  <!-- Rule boxes -->
+  <div class="rule-grid">
+    <div class="rule-box">
+      <div class="rule-title green-title" data-en>📈 When Rates FALL (dovish)</div>
+      <div class="rule-title green-title" data-bg>📈 Когато Лихвите ПАДАТ (dovish / меки)</div>
+      <ul>
+        <li data-en><strong>Stocks</strong> — tend to go up (cheaper borrowing = more profits)</li>
+        <li data-bg><strong>Акции</strong> — склонни да се покачват (по-евтино кредитиране = повече печалби)</li>
+        <li data-en><strong>Bonds</strong> — go up (existing bonds become more valuable)</li>
+        <li data-bg><strong>Облигации</strong> — покачват се (съществуващите облигации стават по-ценни)</li>
+        <li data-en><strong>USD</strong> — weakens (lower yield = less attractive)</li>
+        <li data-bg><strong>USD</strong> — отслабва (по-ниска доходност = по-малко привлекателен)</li>
+        <li data-en><strong>Gold</strong> — rises (less competition from yield)</li>
+        <li data-bg><strong>Злато</strong> — покачва се (по-малка конкуренция от доходност)</li>
+        <li data-en><strong>Crypto</strong> — tends to rally strongly</li>
+        <li data-bg><strong>Крипто</strong> — склонно да се покачва силно</li>
+      </ul>
+    </div>
+    <div class="rule-box">
+      <div class="rule-title red-title" data-en>📉 When Rates RISE (hawkish)</div>
+      <div class="rule-title red-title" data-bg>📉 Когато Лихвите РАСТАТ (ястребови)</div>
+      <ul>
+        <li data-en><strong>Stocks</strong> — initially mixed, then fall if economy slows</li>
+        <li data-bg><strong>Акции</strong> — първоначално смесени, после падат ако икономиката забавя</li>
+        <li data-en><strong>Bonds</strong> — fall in price (new bonds pay more, old ones are worth less)</li>
+        <li data-bg><strong>Облигации</strong> — падат в цена (новите плащат повече, старите вече не са толкова ценни)</li>
+        <li data-en><strong>USD</strong> — strengthens (higher yield attracts capital)</li>
+        <li data-bg><strong>USD</strong> — укрепва (по-висока доходност привлича капитал)</li>
+        <li data-en><strong>Gold</strong> — weakens (dollar-denominated, and yield competes)</li>
+        <li data-bg><strong>Злато</strong> — отслабва (деноминирано в долари, а доходността конкурира)</li>
+        <li data-en><strong>Crypto</strong> — usually falls hard (risk-off)</li>
+        <li data-bg><strong>Крипто</strong> — обикновено пада силно (избягване на риска)</li>
+      </ul>
+    </div>
+  </div>
+
+  <!-- Chart 3: Rates vs Inflation (CPI) -->
+  <div class="chart-box">
+    <h3 data-en>The Fed's Job: Fight Inflation with Rate Hikes</h3>
+    <h3 data-bg>Задачата на Фед: Борба с Инфлацията чрез Повишаване на Лихвите</h3>
+    <div class="chart-sub" data-en>When inflation surged to 9.1% in June 2022, the Fed hiked aggressively. High rates make borrowing expensive → people spend less → prices stop rising. Target is 2%.</div>
+    <div class="chart-sub" data-bg>Когато инфлацията нарасна до 9.1% през юни 2022, Фед повиши лихвите агресивно. Високите лихви правят кредитирането скъпо → хората харчат по-малко → цените спират да растат. Целта е 2%.</div>
+    <div class="chart-wrap"><canvas id="chartInflation"></canvas></div>
+  </div>
+
+  <!-- Yield Curve interactive -->
+  <div class="chart-box">
+    <h3 data-en>The Yield Curve — The Most Watched Recession Indicator</h3>
+    <h3 data-bg>Кривата на Доходността — Най-Следеният Индикатор за Рецесия</h3>
+    <div class="chart-sub" data-en>The yield curve shows interest rates for bonds of different maturities. When short-term rates > long-term rates (inverted), it historically precedes every US recession within 12–24 months.</div>
+    <div class="chart-sub" data-bg>Кривата на доходността показва лихвените проценти за облигации с различен матуритет. Когато краткосрочните лихви > дългосрочните (инвертирана), исторически предшества всяка американска рецесия в рамките на 12–24 месеца.</div>
+    <div class="yield-btns">
+      <button class="yield-btn active" onclick="setYield('normal')"><span data-en>Normal</span><span data-bg>Нормална</span></button>
+      <button class="yield-btn" onclick="setYield('flat')"><span data-en>Flat</span><span data-bg>Плоска</span></button>
+      <button class="yield-btn" onclick="setYield('inverted')"><span data-en>Inverted</span><span data-bg>Инвертирана</span></button>
+    </div>
+    <div class="chart-wrap" style="height:220px"><canvas id="chartYield"></canvas></div>
+    <div class="yield-desc" id="yieldDesc">
+      <span data-en>📗 <strong>Normal curve:</strong> Long-term rates higher than short-term. Economy healthy. Investors expect future growth and demand higher yield for locking money up longer.</span>
+      <span data-bg>📗 <strong>Нормална крива:</strong> Дългосрочните лихви са по-високи от краткосрочните. Икономиката е здрава. Инвеститорите очакват бъдещ растеж и изискват по-висока доходност за по-дълго заключване на парите.</span>
+    </div>
+  </div>
+
+  <!-- Impact table -->
+  <h3 data-en>Quick Reference: Rate Decisions & Market Reactions</h3>
+  <h3 data-bg>Бърза Справка: Решения за Лихвите & Реакции на Пазара</h3>
+  <p data-en>This table shows how each major asset typically reacts when the Fed raises or cuts rates:</p>
+  <p data-bg>Тази таблица показва как всеки основен актив обикновено реагира, когато Фед повишава или намалява лихвите:</p>
+  <table class="impact-table">
+    <thead>
+      <tr>
+        <th data-en>Asset</th><th data-bg>Актив</th>
+        <th data-en>Rates ↑ (Hike)</th><th data-bg>Лихви ↑ (Покачване)</th>
+        <th data-en>Rates ↓ (Cut)</th><th data-bg>Лихви ↓ (Намаление)</th>
+        <th data-en>Why</th><th data-bg>Защо</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td data-en>🇺🇸 USD (Dollar)</td><td data-bg>🇺🇸 USD (Долар)</td>
+        <td class="up" data-en>↑ UP</td><td class="up" data-bg>↑ НАГОРЕ</td>
+        <td class="down" data-en>↓ DOWN</td><td class="down" data-bg>↓ НАДОЛУ</td>
+        <td data-en>Higher rates attract foreign capital seeking yield</td>
+        <td data-bg>По-високите лихви привличат чуждестранен капитал търсещ доходност</td>
+      </tr>
+      <tr>
+        <td data-en>📈 S&P 500 (Stocks)</td><td data-bg>📈 S&P 500 (Акции)</td>
+        <td class="down" data-en>↓ DOWN</td><td class="down" data-bg>↓ НАДОЛУ</td>
+        <td class="up" data-en>↑ UP</td><td class="up" data-bg>↑ НАГОРЕ</td>
+        <td data-en>Higher rates = higher borrowing cost = lower profits</td>
+        <td data-bg>По-високи лихви = по-скъпо кредитиране = по-ниски печалби</td>
+      </tr>
+      <tr>
+        <td data-en>🏛️ Bonds (TLT)</td><td data-bg>🏛️ Облигации (TLT)</td>
+        <td class="down" data-en>↓ DOWN</td><td class="down" data-bg>↓ НАДОЛУ</td>
+        <td class="up" data-en>↑ UP</td><td class="up" data-bg>↑ НАГОРЕ</td>
+        <td data-en>Price and yield move opposite. New bonds pay more → old bonds worth less</td>
+        <td data-bg>Цена и доходност се движат противоположно. Нови облигации плащат повече → старите губят стойност</td>
+      </tr>
+      <tr>
+        <td data-en>🥇 Gold</td><td data-bg>🥇 Злато</td>
+        <td class="down" data-en>↓ DOWN</td><td class="down" data-bg>↓ НАДОЛУ</td>
+        <td class="up" data-en>↑ UP</td><td class="up" data-bg>↑ НАГОРЕ</td>
+        <td data-en>Gold pays no yield — high rates make it less competitive</td>
+        <td data-bg>Златото не носи доходност — при високи лихви капиталът предпочита облигации пред злато</td>
+      </tr>
+      <tr>
+        <td data-en>₿ Bitcoin / Crypto</td><td data-bg>₿ Bitcoin / Крипто</td>
+        <td class="down" data-en>↓ DOWN</td><td class="down" data-bg>↓ НАДОЛУ</td>
+        <td class="up" data-en>↑ UP</td><td class="up" data-bg>↑ НАГОРЕ</td>
+        <td data-en>High-risk asset. Investors dump it when safe yields are available</td>
+        <td data-bg>Рисков актив. Инвеститорите продават, когато безопасни облигации предлагат реална доходност</td>
+      </tr>
+      <tr>
+        <td data-en>🏠 Real Estate</td><td data-bg>🏠 Недвижими Имоти</td>
+        <td class="down" data-en>↓ DOWN</td><td class="down" data-bg>↓ НАДОЛУ</td>
+        <td class="up" data-en>↑ UP</td><td class="up" data-bg>↑ НАГОРЕ</td>
+        <td data-en>Higher mortgage rates = fewer buyers = lower prices</td>
+        <td data-bg>По-скъпи ипотеки = по-малко купувачи = натиск надолу върху цените</td>
+      </tr>
+    </tbody>
+  </table>
+</div>
+</section>
+
+<!-- ═══════════════════════════════════════════════════════════
+     SECTION 3 — ECONOMIC CALENDAR GUIDE
+═══════════════════════════════════════════════════════════ -->
+<section id="calendar">
+<div class="container">
+  <div class="sec-label" data-en>Section 3</div>
+  <div class="sec-label" data-bg>Раздел 3</div>
+  <h2 data-en>Economic Calendar — Every Event Explained</h2>
+  <h2 data-bg>Икономически Календар — Всяко Събитие Обяснено</h2>
+  <p data-en>These are the events that move markets. Learn what each one measures, why it matters, and how traders react.</p>
+  <p data-bg>Това са събитията, които движат пазарите. Научете какво измерва всяко едно, защо има значение и как реагират търговците.</p>
+
+  <div class="divider"></div>
+  <h3 data-en>🏦 Central Bank Decisions (HIGHEST IMPACT)</h3>
+  <h3 data-bg>🏦 Решения на Централните Банки (НАЙ-ГОЛЯМО ВЪЗДЕЙСТВИЕ)</h3>
+  <div class="event-grid">
+
+    <div class="event-card">
+      <div>
+        <h3 data-en>FOMC Rate Decision (Fed)</h3>
+        <h3 data-bg>FOMC Решение за Лихвите (Фед)</h3>
+        <p data-en>8 times per year, the US Federal Reserve announces whether they raise, hold, or cut interest rates. This is the most important single event in global finance. The Fed also releases a statement and holds a press conference. Surprise decisions = huge market moves.</p>
+        <p data-bg>8 пъти годишно Федералният Резерв на САЩ обявява дали повишава, задържа или намалява лихвените проценти. Това е най-важното единично събитие в глобалните финанси. Фед също публикува изявление и провежда пресконференция. Изненадващи решения = огромни пазарни движения.</p>
+      </div>
+      <div class="impact-badges">
+        <span class="badge-sm badge-red" data-en>🔴 EXTREME IMPACT</span>
+        <span class="badge-sm badge-red" data-bg>🔴 ЕКСТРЕМНО ВЪЗДЕЙСТВИЕ</span>
+        <span class="badge-sm badge-blue" data-en>All markets</span>
+        <span class="badge-sm badge-blue" data-bg>Всички пазари</span>
+      </div>
+    </div>
+
+    <div class="event-card">
+      <div>
+        <h3 data-en>ECB Rate Decision (Europe)</h3>
+        <h3 data-bg>Решение на ЕЦБ (Европа)</h3>
+        <p data-en>European Central Bank decides rates for the Eurozone. Directly moves EUR/USD. If ECB is more hawkish than Fed (raises more), EUR strengthens vs USD. If ECB cuts while Fed holds, EUR weakens.</p>
+        <p data-bg>Европейската Централна Банка решава лихвите за Еврозоната. Директно движи EUR/USD. Ако ЕЦБ е по-ястребова от Фед (повишава повече), EUR се укрепва срещу USD. Ако ЕЦБ намалява докато Фед задържа, EUR отслабва.</p>
+      </div>
+      <div class="impact-badges">
+        <span class="badge-sm badge-red" data-en>🔴 HIGH IMPACT</span>
+        <span class="badge-sm badge-red" data-bg>🔴 ГОЛЯМО ВЪЗДЕЙСТВИЕ</span>
+        <span class="badge-sm badge-blue" data-en>EUR pairs</span>
+        <span class="badge-sm badge-blue" data-bg>EUR двойки</span>
+      </div>
+    </div>
+
+    <div class="event-card">
+      <div>
+        <h3 data-en>Fed Minutes / FOMC Minutes</h3>
+        <h3 data-bg>Протоколи на Фед / FOMC</h3>
+        <p data-en>3 weeks after each FOMC meeting, detailed notes are released. Traders hunt for clues about future rate decisions. Words like "concerned about inflation" = hawkish (rates staying high). "Labor market cooling" = dovish (rate cuts coming).</p>
+        <p data-bg>3 седмици след всяко заседание на FOMC се публикуват подробни бележки. Търговците търсят улики за бъдещи решения за лихвите. Думи като "загрижени за инфлацията" = ястребови (лихвите остават високи). "Охлаждане на пазара на труда" = гълъбови / dovish (намаления на лихвите предстоят).</p>
+      </div>
+      <div class="impact-badges">
+        <span class="badge-sm badge-amber" data-en>🟡 MEDIUM IMPACT</span>
+        <span class="badge-sm badge-amber" data-bg>🟡 СРЕДНО ВЪЗДЕЙСТВИЕ</span>
+        <span class="badge-sm badge-blue" data-en>USD, stocks</span>
+        <span class="badge-sm badge-blue" data-bg>USD, акции</span>
+      </div>
+    </div>
+
+  </div>
+
+  <div class="divider"></div>
+  <h3 data-en>📊 Inflation Data</h3>
+  <h3 data-bg>📊 Данни за Инфлацията</h3>
+  <div class="event-grid">
+
+    <div class="event-card">
+      <div>
+        <h3 data-en>CPI — Consumer Price Index</h3>
+        <h3 data-bg>CPI — Индекс на Потребителските Цени</h3>
+        <p data-en>Monthly. Measures how much a "basket" of everyday goods (food, gas, rent, healthcare) costs vs a year ago. <strong>Higher than expected CPI</strong> = inflation hot = Fed will keep rates high = dollar up, stocks down. <strong>Lower than expected</strong> = Fed can cut = dollar down, stocks up. This is THE most traded event after FOMC.</p>
+        <p data-bg>Месечно. Измерва колко струва "кошница" от ежедневни стоки (храна, гориво, наем, здравеопазване) спрямо преди година. <strong>По-висок от очакваното CPI</strong> = инфлацията е гореща = Фед ще задържи лихвите високи = долар нагоре, акции надолу. <strong>По-нисък от очакваното</strong> = Фед може да намали = долар надолу, акции нагоре. Това е НАЙ-търгуваното събитие след FOMC.</p>
+      </div>
+      <div class="impact-badges">
+        <span class="badge-sm badge-red" data-en>🔴 EXTREME IMPACT</span>
+        <span class="badge-sm badge-red" data-bg>🔴 ЕКСТРЕМНО ВЪЗДЕЙСТВИЕ</span>
+        <span class="badge-sm badge-blue" data-en>USD, stocks, gold</span>
+        <span class="badge-sm badge-blue" data-bg>USD, акции, злато</span>
+      </div>
+    </div>
+
+    <div class="event-card">
+      <div>
+        <h3 data-en>Core CPI</h3>
+        <h3 data-bg>Базов CPI</h3>
+        <p data-en>Same as CPI but excludes food and energy (which are volatile). The Fed pays more attention to Core CPI because it shows "sticky" inflation — prices that don't quickly reverse. If Core CPI is falling, that's a strong signal the Fed can cut rates.</p>
+        <p data-bg>Същото като CPI, но без храна и енергия (които са волатилни). Фед обръща повече внимание на базовия CPI, защото показва "лепкава" инфлация — цени, които не се обръщат бързо. Ако базовият CPI пада, това е силен сигнал, че Фед може да намали лихвите.</p>
+      </div>
+      <div class="impact-badges">
+        <span class="badge-sm badge-red" data-en>🔴 HIGH IMPACT</span>
+        <span class="badge-sm badge-red" data-bg>🔴 ГОЛЯМО ВЪЗДЕЙСТВИЕ</span>
+      </div>
+    </div>
+
+    <div class="event-card">
+      <div>
+        <h3 data-en>PCE — Personal Consumption Expenditures</h3>
+        <h3 data-bg>PCE — Лични Потребителски Разходи</h3>
+        <p data-en>The Fed's <em>preferred</em> inflation measure. Released monthly. More comprehensive than CPI. "Core PCE" strips out food and energy. The Fed's target is 2% Core PCE. When this hits 2%, rate cuts become highly likely.</p>
+        <p data-bg>Предпочитаният от Фед инфлационен показател. Публикува се месечно. По-изчерпателен от CPI. "Базов PCE" изключва храна и енергия. Целта на Фед е 2% Базов PCE. Когато достигне 2%, намаленията на лихвите стават силно вероятни.</p>
+      </div>
+      <div class="impact-badges">
+        <span class="badge-sm badge-red" data-en>🔴 HIGH IMPACT</span>
+        <span class="badge-sm badge-red" data-bg>🔴 ГОЛЯМО ВЪЗДЕЙСТВИЕ</span>
+        <span class="badge-sm badge-blue" data-en>USD, bonds</span>
+        <span class="badge-sm badge-blue" data-bg>USD, облигации</span>
+      </div>
+    </div>
+
+    <div class="event-card">
+      <div>
+        <h3 data-en>PPI — Producer Price Index</h3>
+        <h3 data-bg>PPI — Индекс на Производствените Цени</h3>
+        <p data-en>Measures inflation at the factory/wholesale level — before it reaches consumers. Think of it as a "leading indicator" for CPI. If factory prices rise, consumer prices usually follow in 1–3 months. Often released the day before CPI.</p>
+        <p data-bg>Измерва инфлацията на ниво завод/едро — преди да достигне потребителите. Мислете за него като "водещ индикатор" за CPI. Ако фабричните цени растат, потребителските обикновено следват след 1–3 месеца. Често се публикува деня преди CPI.</p>
+      </div>
+      <div class="impact-badges">
+        <span class="badge-sm badge-amber" data-en>🟡 MEDIUM IMPACT</span>
+        <span class="badge-sm badge-amber" data-bg>🟡 СРЕДНО ВЪЗДЕЙСТВИЕ</span>
+      </div>
+    </div>
+
+  </div>
+
+  <div class="divider"></div>
+  <h3 data-en>👷 Jobs & Labour Market</h3>
+  <h3 data-bg>👷 Работни Места & Пазар на Труда</h3>
+  <div class="event-grid">
+
+    <div class="event-card">
+      <div>
+        <h3 data-en>NFP — Non-Farm Payrolls</h3>
+        <h3 data-bg>NFP — Нови Работни Места (Извън Земеделие)</h3>
+        <p data-en>Released first Friday of every month. Shows how many jobs the US economy added or lost. Expected: ~200K jobs. <strong>Much higher than expected</strong> = strong economy = Fed won't cut = dollar up, stocks mixed. <strong>Much lower</strong> = economy slowing = cuts coming = dollar down, stocks up (sometimes). Also includes unemployment rate and wage growth.</p>
+        <p data-bg>Публикува се в първия петък на всеки месец. Показва колко работни места икономиката на САЩ е добавила или загубила. Очаквано: ~200K работни места. <strong>Много по-висок от очакваното</strong> = силна икономика = Фед няма да намалява = долар нагоре, акции смесени. <strong>Много по-нисък</strong> = икономиката се забавя = намаления идват = долар надолу, акции нагоре (понякога).</p>
+      </div>
+      <div class="impact-badges">
+        <span class="badge-sm badge-red" data-en>🔴 EXTREME IMPACT</span>
+        <span class="badge-sm badge-red" data-bg>🔴 ЕКСТРЕМНО ВЪЗДЕЙСТВИЕ</span>
+        <span class="badge-sm badge-blue" data-en>USD, S&P 500</span>
+        <span class="badge-sm badge-blue" data-bg>USD, S&P 500</span>
+      </div>
+    </div>
+
+    <div class="event-card">
+      <div>
+        <h3 data-en>Unemployment Rate</h3>
+        <h3 data-bg>Процент Безработица</h3>
+        <p data-en>Released with NFP. Shows the % of people actively looking for work who can't find it. Currently ~3.9%. <strong>Rising unemployment</strong> = economy weakening = Fed will cut = dollar weakens. <strong>Falling</strong> = economy strong = Fed stays hawkish. The Fed has a "dual mandate": stable prices AND maximum employment.</p>
+        <p data-bg>Публикува се с NFP. Показва % от хората, активно търсещи работа, които не могат да намерят. В момента ~3.9%. <strong>Нарастваща безработица</strong> = икономиката отслабва = Фед ще намали = доларът отслабва. <strong>Намаляваща</strong> = силна икономика = Фед остава ястребов. Фед има "двоен мандат": стабилни цени И максимална заетост.</p>
+      </div>
+      <div class="impact-badges">
+        <span class="badge-sm badge-red" data-en>🔴 HIGH IMPACT</span>
+        <span class="badge-sm badge-red" data-bg>🔴 ГОЛЯМО ВЪЗДЕЙСТВИЕ</span>
+      </div>
+    </div>
+
+    <div class="event-card">
+      <div>
+        <h3 data-en>Initial Jobless Claims</h3>
+        <h3 data-bg>Седмични Молби за Помощи при Безработица</h3>
+        <p data-en>Released every Thursday. Shows how many people filed for unemployment benefits that week. Expected: ~220K. <strong>Higher than expected</strong> = more layoffs = economy weakening. <strong>Lower</strong> = job market still hot. It's a weekly "pulse check" on the labor market — less impactful than NFP but good for short-term trading.</p>
+        <p data-bg>Публикува се всеки четвъртък. Показва колко хора са подали молби за помощи за безработица тази седмица. Очаквано: ~220K. <strong>По-висок от очакваното</strong> = повече съкращения = икономиката отслабва. <strong>По-нисък</strong> = пазарът на труда все още е горещ. Това е седмична "проверка на пулса" на пазара на труда.</p>
+      </div>
+      <div class="impact-badges">
+        <span class="badge-sm badge-amber" data-en>🟡 MEDIUM IMPACT</span>
+        <span class="badge-sm badge-amber" data-bg>🟡 СРЕДНО ВЪЗДЕЙСТВИЕ</span>
+        <span class="badge-sm badge-blue" data-en>USD, stocks</span>
+        <span class="badge-sm badge-blue" data-bg>USD, акции</span>
+      </div>
+    </div>
+
+    <div class="event-card">
+      <div>
+        <h3 data-en>JOLTS — Job Openings</h3>
+        <h3 data-bg>JOLTS — Свободни Работни Места</h3>
+        <p data-en>Monthly. Counts how many unfilled job positions exist. High JOLTS = companies hiring aggressively = tight labor market = wages rise = inflation stays up = Fed hawkish. When JOLTS falls sharply, it signals the labor market is cooling — a green light for rate cuts.</p>
+        <p data-bg>Месечно. Брои колко незаети работни позиции съществуват. Висок JOLTS = компаниите наемат агресивно = стегнат пазар на труда = заплатите растат = инфлацията остава висока = Фед ястребов. Когато JOLTS спадне рязко, сигнализира охлаждане на пазара на труда — зелена светлина за намаления на лихвите.</p>
+      </div>
+      <div class="impact-badges">
+        <span class="badge-sm badge-amber" data-en>🟡 MEDIUM IMPACT</span>
+        <span class="badge-sm badge-amber" data-bg>🟡 СРЕДНО ВЪЗДЕЙСТВИЕ</span>
+      </div>
+    </div>
+
+    <div class="event-card">
+      <div>
+        <h3 data-en>Average Hourly Earnings</h3>
+        <h3 data-bg>Средни Почасови Заплати</h3>
+        <p data-en>Released with NFP. Shows how much wages grew month-over-month. <strong>Hot wage growth</strong> (above 0.3% monthly) = workers earning more = they spend more = inflation stays high. The Fed watches this closely because "wage-price spirals" are hard to break.</p>
+        <p data-bg>Публикува се с NFP. Показва колко са нараснали заплатите от месец на месец. <strong>Силен ръст на заплатите</strong> (над 0.3% месечно) = работниците печелят повече = харчат повече = инфлацията остава висока. Фед следи това отблизо, защото "спиралата заплати-цени" е изключително трудна за спиране.</p>
+      </div>
+      <div class="impact-badges">
+        <span class="badge-sm badge-red" data-en>🔴 HIGH IMPACT</span>
+        <span class="badge-sm badge-red" data-bg>🔴 ГОЛЯМО ВЪЗДЕЙСТВИЕ</span>
+      </div>
+    </div>
+
+  </div>
+
+  <div class="divider"></div>
+  <h3 data-en>📈 Growth & Activity Data</h3>
+  <h3 data-bg>📈 Данни за Растеж и Активност</h3>
+  <div class="event-grid">
+
+    <div class="event-card">
+      <div>
+        <h3 data-en>GDP — Gross Domestic Product</h3>
+        <h3 data-bg>БВП — Брутен Вътрешен Продукт</h3>
+        <p data-en>Quarterly (3 releases: Advance, Second, Final). Measures the total value of all goods and services produced. <strong>Two consecutive negative GDP quarters = official recession.</strong> Strong GDP = stock market positive. Negative surprise = market fear. The US GDP is ~$27 trillion — the largest economy in the world.</p>
+        <p data-bg>Тримесечно (3 издания: Предварително, Второ, Окончателно). Измерва общата стойност на всички произведени стоки и услуги. <strong>Два последователни отрицателни тримесечия на БВП = официална рецесия.</strong> Силен БВП = позитивен фондов пазар. Отрицателна изненада = пазарен страх. БВП на САЩ е ~27 трилиона долара — най-голямата икономика в света.</p>
+      </div>
+      <div class="impact-badges">
+        <span class="badge-sm badge-red" data-en>🔴 HIGH IMPACT</span>
+        <span class="badge-sm badge-red" data-bg>🔴 ГОЛЯМО ВЪЗДЕЙСТВИЕ</span>
+        <span class="badge-sm badge-blue" data-en>All assets</span>
+        <span class="badge-sm badge-blue" data-bg>Всички активи</span>
+      </div>
+    </div>
+
+    <div class="event-card">
+      <div>
+        <h3 data-en>ISM Manufacturing PMI</h3>
+        <h3 data-bg>ISM Производствен PMI</h3>
+        <p data-en>Monthly survey of purchasing managers at factories. <strong>Above 50 = expansion</strong> (factories ordering more = economy growing). <strong>Below 50 = contraction.</strong> One of the best leading indicators — it comes out before official data and tells you where the economy is heading, not where it's been.</p>
+        <p data-bg>Месечно проучване на мениджъри по покупки в заводи. <strong>Над 50 = разширяване</strong> (заводите поръчват повече = икономиката расте). <strong>Под 50 = свиване.</strong> Един от най-добрите водещи индикатори — излиза преди официалните данни и ви казва накъде се движи икономиката, а не откъде е дошла.</p>
+      </div>
+      <div class="impact-badges">
+        <span class="badge-sm badge-red" data-en>🔴 HIGH IMPACT</span>
+        <span class="badge-sm badge-red" data-bg>🔴 ГОЛЯМО ВЪЗДЕЙСТВИЕ</span>
+        <span class="badge-sm badge-blue" data-en>USD, stocks</span>
+        <span class="badge-sm badge-blue" data-bg>USD, акции</span>
+      </div>
+    </div>
+
+    <div class="event-card">
+      <div>
+        <h3 data-en>ISM Services PMI</h3>
+        <h3 data-bg>ISM Услуги PMI</h3>
+        <p data-en>Same concept as Manufacturing PMI but for the service sector (restaurants, banking, healthcare, tech). The US is 70%+ services economy, so this matters MORE than manufacturing PMI. Above 50 = services expanding = economy resilient = Fed less likely to cut.</p>
+        <p data-bg>Същата концепция като производствения PMI, но за сектора на услугите (ресторанти, банки, здравеопазване, технологии). Икономиката на САЩ е 70%+ услуги, така че това е ПО-ВАЖНО от производствения PMI. Над 50 = услугите се разширяват = икономиката е устойчива = Фед по-малко вероятно да намалява.</p>
+      </div>
+      <div class="impact-badges">
+        <span class="badge-sm badge-red" data-en>🔴 HIGH IMPACT</span>
+        <span class="badge-sm badge-red" data-bg>🔴 ГОЛЯМО ВЪЗДЕЙСТВИЕ</span>
+      </div>
+    </div>
+
+    <div class="event-card">
+      <div>
+        <h3 data-en>Retail Sales</h3>
+        <h3 data-bg>Продажби на Дребно</h3>
+        <p data-en>Monthly. Measures consumer spending at stores and online. Consumer spending = ~70% of the US economy. <strong>Strong retail sales</strong> = consumers confident = economy healthy = hawkish Fed signal. <strong>Weak</strong> = consumers pulling back = recession fears. Released mid-month, usually two weeks after month-end.</p>
+        <p data-bg>Месечно. Измерва потребителските разходи в магазини и онлайн. Потребителските разходи = ~70% от икономиката на САЩ. <strong>Силни продажби</strong> = потребителите са уверени = здрава икономика = ястребов сигнал за Фед. <strong>Слаби</strong> = потребителите се ограничават = страхове от рецесия.</p>
+      </div>
+      <div class="impact-badges">
+        <span class="badge-sm badge-red" data-en>🔴 HIGH IMPACT</span>
+        <span class="badge-sm badge-red" data-bg>🔴 ГОЛЯМО ВЪЗДЕЙСТВИЕ</span>
+        <span class="badge-sm badge-blue" data-en>USD, stocks</span>
+        <span class="badge-sm badge-blue" data-bg>USD, акции</span>
+      </div>
+    </div>
+
+    <div class="event-card">
+      <div>
+        <h3 data-en>Durable Goods Orders</h3>
+        <h3 data-bg>Поръчки за Дълготрайни Стоки</h3>
+        <p data-en>Monthly. Orders placed for long-lasting products (aircraft, machinery, cars). A proxy for business investment. "Core" version excludes volatile aircraft orders. Rising = businesses investing = confidence = bullish signal. Falling = companies cutting investment = caution.</p>
+        <p data-bg>Месечно. Поръчки за дълготрайни продукти (самолети, машини, коли). Прокси за бизнес инвестиции. "Базовата" версия изключва волатилните поръчки за самолети. Нарастващи = бизнесите инвестират = доверие = бичи сигнал. Намаляващи = компаниите намаляват инвестициите = предпазливост.</p>
+      </div>
+      <div class="impact-badges">
+        <span class="badge-sm badge-amber" data-en>🟡 MEDIUM IMPACT</span>
+        <span class="badge-sm badge-amber" data-bg>🟡 СРЕДНО ВЪЗДЕЙСТВИЕ</span>
+      </div>
+    </div>
+
+    <div class="event-card">
+      <div>
+        <h3 data-en>Consumer Confidence (CB)</h3>
+        <h3 data-bg>Потребителско Доверие (CB)</h3>
+        <p data-en>Monthly survey by the Conference Board asking how optimistic consumers feel about the economy. High confidence = people plan to spend more = bullish. Low = fear = people save instead = bearish. "Sentiment" data like this is a leading indicator — it changes before actual spending does.</p>
+        <p data-bg>Месечно проучване от Conference Board, питащо потребителите колко оптимистични са за икономиката. Високо доверие = хората планират да харчат повече = бичи. Ниско = страх = хората спестяват = мечи. "Сентимент" данни като това са водещ индикатор — те се променят преди реалните разходи.</p>
+      </div>
+      <div class="impact-badges">
+        <span class="badge-sm badge-amber" data-en>🟡 MEDIUM IMPACT</span>
+        <span class="badge-sm badge-amber" data-bg>🟡 СРЕДНО ВЪЗДЕЙСТВИЕ</span>
+      </div>
+    </div>
+
+  </div>
+
+  <div class="divider"></div>
+  <h3 data-en>📊 Impact Summary Chart</h3>
+  <h3 data-bg>📊 Обобщителна Графика на Въздействието</h3>
+  <div class="chart-box">
+    <h3 data-en>How Each Event Moves USD When Result Beats Expectations</h3>
+    <h3 data-bg>Как Всяко Събитие Движи USD Когато Резултатът Надвишава Очакванията</h3>
+    <div class="chart-sub" data-en>Higher bar = stronger USD reaction. Invert for misses.</div>
+    <div class="chart-sub" data-bg>По-висок стълб = по-силна USD реакция. Обърнете за разочарования.</div>
+    <div class="chart-wrap" style="height:280px"><canvas id="chartImpact"></canvas></div>
+  </div>
+
+</div>
+</section>
+
+<!-- ═══════════════════════════════════════════════════════════
+     SECTION 4 — CHEAT SHEET
+═══════════════════════════════════════════════════════════ -->
+<section id="cheatsheet">
+<div class="container">
+  <div class="sec-label" data-en>Section 4</div>
+  <div class="sec-label" data-bg>Раздел 4</div>
+  <h2 data-en>Glossary — Key Terms Explained</h2>
+  <h2 data-bg>Речник — Ключови Термини Обяснени</h2>
+  <div class="cheat-grid">
+    <div class="cheat-item"><div class="term">Hawkish (ястребов)</div><div class="def" data-en>Favoring higher rates to fight inflation. Dollar positive.</div><div class="def" data-bg>Централна банка иска да вдига лихвите — войнствена позиция срещу инфлацията. Долар нагоре, акции под натиск.</div></div>
+    <div class="cheat-item"><div class="term">Dovish (гълъбов)</div><div class="def" data-en>Favoring lower rates to stimulate growth. Stock/crypto positive.</div><div class="def" data-bg>Централна банка предпочита ниски лихви за стимулиране на икономиката. Положително за акции, крипто и злато.</div></div>
+    <div class="cheat-item"><div class="term">Basis Point (bps)</div><div class="def" data-en>0.01%. A 25bps hike = rates rise by 0.25%.</div><div class="def" data-bg>0.01%. Повишение от 25bps = лихвите се покачват с 0.25%.</div></div>
+    <div class="cheat-item"><div class="term">Bull Market</div><div class="def" data-en>Prices rising. 20%+ gain from recent lows.</div><div class="def" data-bg>Цените растат. Ръст над 20% от последните ниски нива.</div></div>
+    <div class="cheat-item"><div class="term">Bear Market</div><div class="def" data-en>Prices falling. 20%+ decline from recent highs.</div><div class="def" data-bg>Цените падат. Спад над 20% от последните върхове.</div></div>
+    <div class="cheat-item"><div class="term">VIX (Fear Index)</div><div class="def" data-en>Options market's 30-day volatility forecast. Below 15 = calm. Above 30 = panic.</div><div class="def" data-bg>30-дневна прогноза за волатилност от пазара на опции. Под 15 = спокойно. Над 30 = паника.</div></div>
+    <div class="cheat-item"><div class="term">Yield</div><div class="def" data-en>The return on a bond. 10Y yield rising = bond prices falling.</div><div class="def" data-bg>Доходността на облигация. Нарастваща 10Y доходност = падащи цени на облигациите.</div></div>
+    <div class="cheat-item"><div class="term">Inverted Yield Curve</div><div class="def" data-en>Short-term rates higher than long-term. Historically precedes recessions.</div><div class="def" data-bg>Краткосрочните лихви по-високи от дългосрочните. Исторически предшества рецесии.</div></div>
+    <div class="cheat-item"><div class="term">MVRV Ratio</div><div class="def" data-en>Bitcoin: current price ÷ average cost basis. Above 3.5 = sell zone. Below 1 = buy zone.</div><div class="def" data-bg>Bitcoin: текуща цена ÷ средна себестойност. Над 3.5 = зона за продажба. Под 1 = зона за купуване.</div></div>
+    <div class="cheat-item"><div class="term">COT Report</div><div class="def" data-en>Weekly CFTC data showing how institutional traders are positioned.</div><div class="def" data-bg>Седмичен CFTC отчет — показва как институционалните търговци (хедж фондове, банки) са позиционирани на фючърс пазарите.</div></div>
+    <div class="cheat-item"><div class="term">EPS</div><div class="def" data-en>Earnings Per Share. Net profit ÷ shares outstanding. Beat = stock up. Miss = stock down.</div><div class="def" data-bg>Печалба на акция. Нетна печалба ÷ брой акции. Резултат над прогнозата = акцията скача. Под прогнозата = акцията пада.</div></div>
+    <div class="cheat-item"><div class="term">QE / QT</div><div class="def" data-en>Quantitative Easing (Fed buys bonds = money into system) / Quantitative Tightening (opposite).</div><div class="def" data-bg>Количествено облекчаване (Фед купува облигации = пари в системата) / Количествено затягане (обратното).</div></div>
+    <div class="cheat-item"><div class="term">Risk-On</div><div class="def" data-en>Investors buying risky assets (stocks, crypto). Happens when economy looks good.</div><div class="def" data-bg>Апетит за риск — пари се движат към акции, крипто, сурови материали. Сигнал: икономиката е стабилна, няма страх.</div></div>
+    <div class="cheat-item"><div class="term">Risk-Off</div><div class="def" data-en>Investors fleeing to safety (bonds, gold, USD). Happens on fear/uncertainty.</div><div class="def" data-bg>Бягство от риска — пари се движат към облигации, злато и долар. Сигнал: несигурност, страх от рецесия или криза.</div></div>
+    <div class="cheat-item"><div class="term">Gamma Flip (GEX)</div><div class="def" data-en>Price level where market makers switch from dampening to amplifying moves.</div><div class="def" data-bg>Ценово ниво, при което маркет мейкърите преминават от потискане към усилване на движенията.</div></div>
+    <div class="cheat-item"><div class="term">Seasonality</div><div class="def" data-en>Historical tendency for prices to move in certain directions during specific months.</div><div class="def" data-bg>Историческа тенденция за движение на цените в определени посоки през специфични месеци.</div></div>
+  </div>
+</div>
+</section>
+
+<div style="height:64px"></div>
+
+<script>
+// ── Language toggle ───────────────────────────────────────────────────────────
+function setLang(lang) {
+  document.body.className = 'lang-' + lang;
+  document.querySelectorAll('.lang-btn').forEach(b => b.classList.remove('active'));
+  document.querySelector('.lang-btn:' + (lang === 'en' ? 'first-child' : 'last-child')).classList.add('active');
+  if (typeof refreshCycleCardLang === 'function') refreshCycleCardLang();
+}
+
+// ── Chart defaults ────────────────────────────────────────────────────────────
+Chart.defaults.color = '#71717a';
+Chart.defaults.borderColor = '#27272a';
+Chart.defaults.font.family = "'Segoe UI', system-ui, sans-serif";
+
+const amber = '#f59e0b', green = '#34d399', red = '#f87171', blue = '#60a5fa', purple = '#a78bfa';
+
+// ── Chart 1: Fed Funds Rate ───────────────────────────────────────────────────
+new Chart(document.getElementById('chartRates'), {
+  type: 'line',
+  data: {
+    labels: ['Jan 15','Jan 16','Jan 17','Jan 18','Jan 19','Jan 20','Jan 21','Mar 22','Jun 22','Sep 22','Dec 22','Mar 23','Jun 23','Sep 23','Dec 23','Jun 24','Dec 24'],
+    datasets: [{
+      label: 'Fed Funds Rate (%)',
+      data:  [0.25, 0.5, 0.75, 1.5, 2.5, 1.75, 0.25, 0.5, 1.75, 3.25, 4.5, 5.0, 5.25, 5.5, 5.5, 5.5, 4.75],
+      borderColor: amber, backgroundColor: 'rgba(245,158,11,0.08)',
+      borderWidth: 2.5, fill: true, tension: 0.3, pointRadius: 3, pointBackgroundColor: amber,
+    }]
+  },
+  options: {
+    responsive: true, maintainAspectRatio: false,
+    plugins: { legend: { display: false }, tooltip: { callbacks: { label: c => c.raw + '%' } } },
+    scales: {
+      y: { grid: { color: '#1c1c1f' }, ticks: { callback: v => v + '%' } },
+      x: { grid: { display: false } }
+    }
+  }
+});
+
+// ── Chart 2: S&P 500 ──────────────────────────────────────────────────────────
+new Chart(document.getElementById('chartSP'), {
+  type: 'line',
+  data: {
+    labels: ['Jan 19','Jan 20','Apr 20','Jan 21','Jan 22','Jun 22','Jan 23','Jan 24','Jun 24'],
+    datasets: [
+      {
+        label: 'S&P 500',
+        data:  [2600, 3300, 2200, 3700, 4800, 3650, 3900, 4800, 5400],
+        borderColor: green, backgroundColor: 'rgba(52,211,153,0.07)',
+        borderWidth: 2, fill: true, tension: 0.4, yAxisID: 'y', pointRadius: 3, pointBackgroundColor: green,
+      },
+      {
+        label: 'Fed Rate (%)',
+        data:  [2.5, 1.75, 0.25, 0.25, 0.25, 1.75, 4.5, 5.5, 5.5],
+        borderColor: amber, borderDash: [5,4],
+        borderWidth: 2, fill: false, tension: 0.3, yAxisID: 'y2', pointRadius: 0,
+      }
+    ]
+  },
+  options: {
+    responsive: true, maintainAspectRatio: false,
+    plugins: { legend: { labels: { boxWidth: 12, padding: 16 } } },
+    scales: {
+      y:  { position: 'left',  grid: { color: '#1c1c1f' }, ticks: { callback: v => '$' + v } },
+      y2: { position: 'right', grid: { display: false }, ticks: { callback: v => v + '%' }, max: 8 },
+      x:  { grid: { display: false } }
+    }
+  }
+});
+
+// ── Chart 3: Inflation ────────────────────────────────────────────────────────
+new Chart(document.getElementById('chartInflation'), {
+  type: 'line',
+  data: {
+    labels: ['Jan 20','Jul 20','Jan 21','Jul 21','Jan 22','Apr 22','Jun 22','Sep 22','Jan 23','Jun 23','Jan 24','Jun 24'],
+    datasets: [
+      {
+        label: 'CPI YoY (%)',
+        data:  [2.5, 1.0, 1.4, 5.4, 7.5, 8.3, 9.1, 8.2, 6.4, 3.0, 3.4, 3.0],
+        borderColor: red, backgroundColor: 'rgba(248,113,113,0.08)',
+        borderWidth: 2.5, fill: true, tension: 0.4, yAxisID: 'y', pointRadius: 3, pointBackgroundColor: red,
+      },
+      {
+        label: 'Fed Rate (%)',
+        data:  [1.75, 0.25, 0.25, 0.25, 0.25, 0.5, 1.75, 3.25, 4.5, 5.25, 5.5, 5.5],
+        borderColor: amber, borderDash: [5,4],
+        borderWidth: 2, fill: false, tension: 0.3, yAxisID: 'y', pointRadius: 0,
+      },
+      {
+        label: '2% Target',
+        data:  [2,2,2,2,2,2,2,2,2,2,2,2],
+        borderColor: '#27272a', borderDash: [3,6],
+        borderWidth: 1.5, fill: false, pointRadius: 0,
+      }
+    ]
+  },
+  options: {
+    responsive: true, maintainAspectRatio: false,
+    plugins: { legend: { labels: { boxWidth: 12, padding: 16 } } },
+    scales: {
+      y: { grid: { color: '#1c1c1f' }, ticks: { callback: v => v + '%' } },
+      x: { grid: { display: false } }
+    }
+  }
+});
+
+// ── Yield curve interactive ───────────────────────────────────────────────────
+const yieldShapes = {
+  normal:   { data: [4.0, 4.1, 4.3, 4.6, 4.9, 5.2, 5.4], color: green,
+    desc_en: '📗 <strong>Normal curve:</strong> Long-term rates higher than short-term. Economy healthy. Investors expect future growth.',
+    desc_bg: '📗 <strong>Нормална крива:</strong> Дългосрочните лихви по-високи от краткосрочните. Икономиката е здрава.' },
+  flat:     { data: [5.1, 5.1, 5.1, 5.0, 5.0, 5.1, 5.1], color: amber,
+    desc_en: '🟡 <strong>Flat curve:</strong> Short and long rates nearly equal. Economy in transition — could go either way. Often seen before inversions.',
+    desc_bg: '🟡 <strong>Плоска крива:</strong> Краткосрочните и дългосрочните лихви почти равни. Икономиката в преход — може да отиде в двете посоки.' },
+  inverted: { data: [5.5, 5.4, 5.2, 4.9, 4.6, 4.3, 4.1], color: red,
+    desc_en: '🔴 <strong>Inverted curve:</strong> Short-term rates ABOVE long-term. Investors expect a recession — they rush into long bonds. Has predicted every US recession since 1970.',
+    desc_bg: '🔴 <strong>Инвертирана крива:</strong> Краткосрочните лихви НАД дългосрочните. Инвеститорите очакват рецесия — втурват се в дългосрочни облигации. Е предсказала всяка американска рецесия от 1970 г.' },
+};
+const yieldLabels = ['1M','3M','6M','1Y','2Y','5Y','10Y'];
+let yieldChart = new Chart(document.getElementById('chartYield'), {
+  type: 'line',
+  data: {
+    labels: yieldLabels,
+    datasets: [{
+      label: 'Yield (%)',
+      data: yieldShapes.normal.data,
+      borderColor: green, backgroundColor: 'rgba(52,211,153,0.1)',
+      borderWidth: 2.5, fill: true, tension: 0.3, pointRadius: 5, pointBackgroundColor: green,
+    }]
+  },
+  options: {
+    responsive: true, maintainAspectRatio: false,
+    plugins: { legend: { display: false } },
+    scales: {
+      y: { grid: { color: '#1c1c1f' }, ticks: { callback: v => v + '%' }, min: 3, max: 6.5 },
+      x: { grid: { display: false } }
+    }
+  }
+});
+function setYield(type) {
+  const s = yieldShapes[type];
+  yieldChart.data.datasets[0].data = s.data;
+  yieldChart.data.datasets[0].borderColor = s.color;
+  yieldChart.data.datasets[0].backgroundColor = s.color + '18';
+  yieldChart.data.datasets[0].pointBackgroundColor = s.color;
+  yieldChart.update();
+  const lang = document.body.className.includes('bg') ? 'bg' : 'en';
+  document.getElementById('yieldDesc').innerHTML =
+    '<span data-en>' + s.desc_en + '</span><span data-bg>' + s.desc_bg + '</span>';
+  setLang(lang);
+  document.querySelectorAll('.yield-btn').forEach(b => b.classList.remove('active'));
+  document.querySelectorAll('.yield-btn').forEach(b => { if(b.getAttribute('onclick').includes(type)) b.classList.add('active'); });
+}
+
+// ── Chart 4: Impact ───────────────────────────────────────────────────────────
+new Chart(document.getElementById('chartImpact'), {
+  type: 'bar',
+  data: {
+    labels: ['FOMC Rate\nDecision','CPI\nReport','NFP\nPayrolls','PCE\nInflation','GDP\nRelease','ISM\nManuf.','Retail\nSales','JOLTS\nJobs','Initial\nClaims'],
+    datasets: [{
+      label: 'Typical USD Move (pips, beat vs miss)',
+      data: [120, 110, 95, 75, 60, 55, 50, 40, 30],
+      backgroundColor: [
+        'rgba(248,113,113,.7)','rgba(248,113,113,.7)','rgba(248,113,113,.65)',
+        'rgba(245,158,11,.6)', 'rgba(245,158,11,.6)','rgba(245,158,11,.55)',
+        'rgba(245,158,11,.5)', 'rgba(96,165,250,.5)', 'rgba(96,165,250,.45)',
+      ],
+      borderWidth: 0, borderRadius: 4,
+    }]
+  },
+  options: {
+    responsive: true, maintainAspectRatio: false, indexAxis: 'y',
+    plugins: { legend: { display: false } },
+    scales: {
+      x: { grid: { color: '#1c1c1f' }, ticks: { callback: v => v + 'p' } },
+      y: { grid: { display: false } }
+    }
+  }
+});
+
+// ── Fed Cycle Animation ───────────────────────────────────────────────────────
+const CYCLE_PHASES = [
+  {
+    rate: 0.5, infl: 8.5, unemp: 3.5,
+    name_en: 'PHASE 1 — OVERHEATING ECONOMY',
+    name_bg: 'ФАЗ 1 — ПРЕГРЯВАЩА ИКОНОМИКА',
+    color: '#f87171',
+    desc_en: 'Economy is booming. Unemployment is very low (3.5%) — almost everyone has a job. But prices are rising fast at 8.5% per year. The Fed decides it must act: <strong style="color:#fbbf24">it raises interest rates aggressively to cool things down.</strong>',
+    desc_bg: 'Икономиката е в разцвет. Безработицата е много ниска (3.5%) — почти всички имат работа. Но цените растат бързо с 8.5% годишно. Фед решава, че трябва да действа: <strong style="color:#fbbf24">повишава лихвените проценти агресивно за охлаждане.</strong>',
+    flow_en: ['🔥 High Inflation', '→', '⚠️ Low Unemployment', '→', '🏦 Fed RAISES Rates ↑'],
+    flow_bg: ['🔥 Висока Инфлация', '→', '⚠️ Ниска Безработица', '→', '🏦 Фед ПОВИШАВА Лихви ↑'],
+  },
+  {
+    rate: 5.5, infl: 4.2, unemp: 5.0,
+    name_en: 'PHASE 2 — RATE HIKES BITING',
+    name_bg: 'ФАЗ 2 — ЛИХВИТЕ РАБОТЯТ',
+    color: '#f59e0b',
+    desc_en: 'Rates now at 5.5%. Mortgages are expensive, business loans cost more. Companies slow hiring — or start laying off workers. Inflation is falling. But unemployment is rising. <strong style="color:#fbbf24">A painful but necessary trade-off.</strong>',
+    desc_bg: 'Лихвите са вече 5.5%. Ипотеките са скъпи, бизнес кредитите струват повече. Компаниите забавят наемането — или започват съкращения. Инфлацията пада. Но безработицата расте. <strong style="color:#fbbf24">Болезнен, но необходим компромис.</strong>',
+    flow_en: ['📉 Inflation falling', '↔', '📈 Unemployment rising'],
+    flow_bg: ['📉 Инфлацията пада', '↔', '📈 Безработицата расте'],
+  },
+  {
+    rate: 5.5, infl: 2.4, unemp: 5.8,
+    name_en: 'PHASE 3 — MISSION ACCOMPLISHED',
+    name_bg: 'ФАЗ 3 — МИСИЯТА Е ИЗПЪЛНЕНА',
+    color: '#34d399',
+    desc_en: 'Inflation is back near the 2% target. But unemployment is now 5.8% — uncomfortably high. The Fed has a <em>dual mandate</em>: stable prices AND maximum employment. It can\'t ignore job losses. <strong style="color:#fbbf24">Time to cut rates.</strong>',
+    desc_bg: 'Инфлацията е обратно близо до целта от 2%. Но безработицата е 5.8% — неудобно висока. Фед има <em>двоен мандат</em>: стабилни цени И максимална заетост. Не може да игнорира загубата на работни места. <strong style="color:#fbbf24">Време е за намаления на лихвите.</strong>',
+    flow_en: ['✅ Inflation at target', '→', '⚠️ Unemployment too high', '→', '🏦 Fed CUTS Rates ↓'],
+    flow_bg: ['✅ Инфлацията на цел', '→', '⚠️ Безработицата висока', '→', '🏦 Фед НАМАЛЯВА Лихви ↓'],
+  },
+  {
+    rate: 2.5, infl: 3.1, unemp: 4.0,
+    name_en: 'PHASE 4 — RECOVERY (CYCLE REPEATS)',
+    name_bg: 'ФАЗ 4 — ВЪЗСТАНОВЯВАНЕ (ЦИКЪЛЪТ СЕ ПОВТАРЯ)',
+    color: '#60a5fa',
+    desc_en: 'Rates cut to 2.5%. Borrowing is cheap again — businesses hire, unemployment falls back to 4%. But cheaper money means people spend more. <strong style="color:#fbbf24">Inflation creeps up again... and the entire cycle begins again. ↺</strong>',
+    desc_bg: 'Лихвите намалени до 2.5%. Кредитирането е евтино отново — бизнесите наемат, безработицата пада до 4%. Но евтините пари означават повече харчене. <strong style="color:#fbbf24">Инфлацията расте отново... и целият цикъл започва отначало. ↺</strong>',
+    flow_en: ['💚 Jobs recovering', '→', '⚠️ Inflation creeping up', '→', '↺ Cycle restarts'],
+    flow_bg: ['💚 Работни места се връщат', '→', '⚠️ Инфлацията расте', '→', '↺ Цикълът се рестартира'],
+  },
+];
+
+const GCFG = {
+  rate:  { min: 0, max: 8,  zones: [[0,2,'#60a5fa'],[2,4.5,'#f59e0b'],[4.5,8,'#f87171']] },
+  infl:  { min: 0, max: 12, zones: [[0,2.5,'#34d399'],[2.5,5,'#f59e0b'],[5,12,'#f87171']] },
+  unemp: { min: 2, max: 8,  zones: [[2,4.5,'#34d399'],[4.5,6,'#f59e0b'],[6,8,'#f87171']] },
+};
+
+const C_HOLD = 2800, C_TRANS = 1200;
+let cIdx = 0, cPaused = true, cTimer = null, cAF = null, cT0 = null;
+let cycleChart = null, cXPos = 0;
+
+function gaugePt(cx, cy, r, deg) {
+  const rad = (deg - 90) * Math.PI / 180;
+  return [cx + r * Math.cos(rad), cy + r * Math.sin(rad)];
+}
+
+function gaugeArc(cx, cy, r, a1, a2) {
+  const sw = ((a2 - a1) + 360) % 360;
+  if (sw < 0.5) return '';
+  const [x1,y1] = gaugePt(cx,cy,r,a1), [x2,y2] = gaugePt(cx,cy,r,a2);
+  return `M${x1.toFixed(1)},${y1.toFixed(1)} A${r},${r} 0 ${sw>180?1:0} 1 ${x2.toFixed(1)},${y2.toFixed(1)}`;
+}
+
+function v2a(v, min, max) { return -135 + Math.max(0, Math.min(1, (v-min)/(max-min))) * 270; }
+
+function zCol(v, zones) {
+  for (const [a,b,c] of zones) if (v >= a && v <= b) return c;
+  return zones[zones.length-1][2];
+}
+
+function drawG(id, val, cfg) {
+  const svg = document.getElementById(id); if (!svg) return;
+  const [cx,cy,R,RN] = [80,78,62,50];
+  svg.innerHTML = '';
+  const ns = 'http://www.w3.org/2000/svg';
+  const mk = (tag, at) => { const e=document.createElementNS(ns,tag); for(const [k,v] of Object.entries(at)) e.setAttribute(k,v); return e; };
+
+  // Background track
+  svg.appendChild(mk('path',{d:gaugeArc(cx,cy,R,-135,135),fill:'none',stroke:'#27272a','stroke-width':'10','stroke-linecap':'round'}));
+
+  // Zone bands (dim)
+  for(const [a,b,col] of cfg.zones){
+    const d=gaugeArc(cx,cy,R,v2a(a,cfg.min,cfg.max),v2a(b,cfg.min,cfg.max));
+    if(d)svg.appendChild(mk('path',{d,fill:'none',stroke:col,'stroke-width':'10','stroke-linecap':'round',opacity:'0.18'}));
+  }
+
+  // Active fill
+  const col=zCol(val,cfg.zones), ang=v2a(val,cfg.min,cfg.max);
+  const ad=gaugeArc(cx,cy,R,-135,ang);
+  if(ad)svg.appendChild(mk('path',{d:ad,fill:'none',stroke:col,'stroke-width':'7','stroke-linecap':'round'}));
+
+  // Needle triangle
+  const [tx,ty]=gaugePt(cx,cy,RN,ang);
+  const [bx1,by1]=gaugePt(cx,cy,8,ang+90);
+  const [bx2,by2]=gaugePt(cx,cy,8,ang-90);
+  svg.appendChild(mk('polygon',{points:`${tx.toFixed(1)},${ty.toFixed(1)} ${bx1.toFixed(1)},${by1.toFixed(1)} ${bx2.toFixed(1)},${by2.toFixed(1)}`,fill:'#d4d4d8',opacity:'0.95'}));
+  svg.appendChild(mk('circle',{cx,cy,r:'5',fill:'#52525b'}));
+
+  // Zone tick marks at min/max
+  const [lx,ly]=gaugePt(cx,cy,R+9,-135), [rx,ry]=gaugePt(cx,cy,R+9,135);
+  const [li,le]=gaugePt(cx,cy,R-4,-135), [ri,re]=gaugePt(cx,cy,R-4,135);
+  svg.appendChild(mk('line',{x1:lx.toFixed(1),y1:ly.toFixed(1),x2:li.toFixed(1),y2:le.toFixed(1),stroke:'#3f3f46','stroke-width':'1.5'}));
+  svg.appendChild(mk('line',{x1:rx.toFixed(1),y1:ry.toFixed(1),x2:ri.toFixed(1),y2:re.toFixed(1),stroke:'#3f3f46','stroke-width':'1.5'}));
+}
+
+function setCycleCard(phaseIdx) {
+  const p = CYCLE_PHASES[phaseIdx];
+  const lg = document.body.classList.contains('lang-bg') ? 'bg' : 'en';
+  document.getElementById('cycleCard').style.borderColor = p.color;
+  const nm = document.getElementById('cycleName');
+  nm.style.color = p.color; nm.textContent = p['name_'+lg];
+  document.getElementById('cycleDesc').innerHTML = p['desc_'+lg];
+  document.getElementById('cyclePhaseLbl').textContent = 'PHASE '+(phaseIdx+1)+' / 4';
+  const flow = document.getElementById('cycleFlow');
+  flow.innerHTML = '';
+  p['flow_'+lg].forEach(item => {
+    const s = document.createElement('span');
+    const isArr = item === '→' || item === '↔' || item.startsWith('↺');
+    s.style.cssText = isArr
+      ? 'color:#52525b;font-size:18px;font-weight:900;padding:0 2px'
+      : 'background:#18181b;border:1px solid #27272a;border-radius:6px;padding:4px 10px;font-size:11px;font-weight:700;color:#a1a1aa;white-space:nowrap';
+    s.textContent = item;
+    flow.appendChild(s);
+  });
+}
+
+function setGaugeVals(rate, infl, unemp) {
+  drawG('gRate',  rate,  GCFG.rate);
+  drawG('gInfl',  infl,  GCFG.infl);
+  drawG('gUnemp', unemp, GCFG.unemp);
+  const rv = document.getElementById('gRateVal');
+  const iv = document.getElementById('gInflVal');
+  const uv = document.getElementById('gUnempVal');
+  rv.textContent = rate.toFixed(2)+'%';  rv.style.color = zCol(rate,  GCFG.rate.zones);
+  iv.textContent = infl.toFixed(1)+'%';  iv.style.color = zCol(infl,  GCFG.infl.zones);
+  uv.textContent = unemp.toFixed(1)+'%'; uv.style.color = zCol(unemp, GCFG.unemp.zones);
+}
+
+function easeIO(t) { return t < 0.5 ? 2*t*t : -1+(4-2*t)*t; }
+
+function runTransition(from, to, onDone) {
+  if (cAF) cancelAnimationFrame(cAF);
+  cT0 = null;
+  const fromX = from.idx;
+  const toX = (from.idx === 3 && to.idx === 0) ? 4 : to.idx; // handle wrap-around
+  function step(ts) {
+    if (!cT0) cT0 = ts;
+    const t = Math.min((ts - cT0) / C_TRANS, 1);
+    const e = easeIO(t);
+    setGaugeVals(
+      from.rate  + (to.rate  - from.rate)  * e,
+      from.infl  + (to.infl  - from.infl)  * e,
+      from.unemp + (to.unemp - from.unemp) * e
+    );
+    cXPos = fromX + (toX - fromX) * e;
+    if (cycleChart) cycleChart.update('none');
+    if (t >= 0.5) setCycleCard(to.idx);
+    else setCycleCard(from.idx);
+    if (t < 1) cAF = requestAnimationFrame(step);
+    else {
+      setGaugeVals(to.rate, to.infl, to.unemp);
+      setCycleCard(to.idx);
+      cXPos = to.idx; // snap back to 0 after wrap-around from 4
+      if (cycleChart) cycleChart.update('none');
+      if (onDone) onDone();
+    }
+  }
+  cAF = requestAnimationFrame(step);
+}
+
+function schedNext() {
+  clearTimeout(cTimer);
+  cTimer = setTimeout(() => {
+    if (!cPaused) {
+      const prev = cIdx;
+      cIdx = (cIdx + 1) % 4;
+      runTransition({...CYCLE_PHASES[prev],idx:prev},{...CYCLE_PHASES[cIdx],idx:cIdx}, () => { if(!cPaused) schedNext(); });
+    }
+  }, C_HOLD);
+}
+
+function cyclePauseToggle() {
+  cPaused = !cPaused;
+  const btn = document.getElementById('cyclePlayBtn');
+  if (cPaused) { btn.textContent='▶ Play'; btn.classList.remove('active'); clearTimeout(cTimer); if(cAF) cancelAnimationFrame(cAF); }
+  else { btn.textContent='⏸ Pause'; btn.classList.add('active'); schedNext(); }
+}
+
+function cycleManualStep() {
+  clearTimeout(cTimer); if(cAF) cancelAnimationFrame(cAF);
+  const prev = cIdx;
+  cIdx = (cIdx + 1) % 4;
+  const wasPaused = cPaused; cPaused = true; // pause auto-advance during manual step
+  runTransition({...CYCLE_PHASES[prev],idx:prev},{...CYCLE_PHASES[cIdx],idx:cIdx}, () => {
+    cPaused = wasPaused;
+    if(!cPaused) schedNext();
+  });
+}
+
+function refreshCycleCardLang() { setCycleCard(cIdx); }
+
+function initCycleChart() {
+  const canvas = document.getElementById('cycleLineChart'); if (!canvas) return;
+  // {x,y} pairs — 5 points, last = Phase 1 again to show loop closing
+  const rD = [{x:0,y:0.5},{x:1,y:5.5},{x:2,y:5.5},{x:3,y:2.5},{x:4,y:0.5}];
+  const iD = [{x:0,y:8.5},{x:1,y:4.2},{x:2,y:2.4},{x:3,y:3.1},{x:4,y:8.5}];
+  const uD = [{x:0,y:3.5},{x:1,y:5.0},{x:2,y:5.8},{x:3,y:4.0},{x:4,y:3.5}];
+
+  const vlinePlugin = {
+    id: 'vline',
+    afterDatasetsDraw(chart) {
+      const {ctx, chartArea:ca, scales} = chart; if (!ca) return;
+      const ph  = Math.round(cXPos) % 4;
+      const col = CYCLE_PHASES[ph].color;
+      const xp  = scales.x.getPixelForValue(cXPos);
+      const bx0 = scales.x.getPixelForValue(Math.max(0, Math.round(cXPos) - 0.5));
+      const bx1 = scales.x.getPixelForValue(Math.min(4, Math.round(cXPos) + 0.5));
+      ctx.save();
+      // phase region highlight
+      ctx.fillStyle = col + '18';
+      ctx.fillRect(bx0, ca.top, bx1 - bx0, ca.bottom - ca.top);
+      // vertical cursor line
+      ctx.beginPath(); ctx.strokeStyle = col + 'cc'; ctx.lineWidth = 2; ctx.setLineDash([5, 4]);
+      ctx.moveTo(xp, ca.top); ctx.lineTo(xp, ca.bottom); ctx.stroke();
+      // dot at top
+      ctx.beginPath(); ctx.fillStyle = col; ctx.setLineDash([]); ctx.arc(xp, ca.top + 7, 5, 0, Math.PI * 2); ctx.fill();
+      // causal arrows between phase points (at x = 0.5, 1.5, 2.5, 3.5)
+      const causes = ['Fed Hikes ↑','Loans Expensive → Layoffs','Fed Cuts ↓','Hiring Returns'];
+      ctx.font = '8px sans-serif'; ctx.textAlign = 'center'; ctx.textBaseline = 'bottom'; ctx.fillStyle = 'rgba(82,82,91,0.85)';
+      causes.forEach((txt, i) => ctx.fillText(txt, scales.x.getPixelForValue(i + 0.5), ca.bottom - 2));
+      ctx.restore();
+    }
+  };
+
+  cycleChart = new Chart(canvas, {
+    type: 'line', plugins: [vlinePlugin],
+    data: { datasets: [
+      { label:'Fed Rate %',     data:rD, borderColor:amber, borderDash:[6,3], borderWidth:2.5, pointRadius:4, pointBackgroundColor:amber, fill:false, tension:0.3 },
+      { label:'Inflation %',    data:iD, borderColor:red,                     borderWidth:2.5, pointRadius:4, pointBackgroundColor:red,   fill:false, tension:0.3 },
+      { label:'Unemployment %', data:uD, borderColor:green,                   borderWidth:2.5, pointRadius:4, pointBackgroundColor:green, fill:false, tension:0.3 },
+    ]},
+    options: {
+      animation: false, responsive: true, maintainAspectRatio: false,
+      plugins: {
+        legend: { labels: { boxWidth: 10, padding: 14, font: { size: 11 }, color: '#71717a' } },
+        tooltip: { callbacks: { label: c => c.dataset.label + ': ' + c.raw.y + '%' } },
+      },
+      scales: {
+        x: { type:'linear', min:0, max:4, grid:{ color:'#1c1c1f' },
+             ticks:{ stepSize:1, color:'#71717a', font:{ size:10 }, padding:4,
+                     callback: v => ['Phase 1','Phase 2','Phase 3','Phase 4','↺ Ph.1'][v] || '' }},
+        y: { min:0, max:12, grid:{ color:'#1c1c1f' },
+             ticks:{ callback: v => v + '%', color:'#71717a', font:{ size:10 } }},
+      }
+    }
+  });
+}
+
+// Init on page load
+setGaugeVals(CYCLE_PHASES[0].rate, CYCLE_PHASES[0].infl, CYCLE_PHASES[0].unemp);
+setCycleCard(0);
+initCycleChart();
+</script>
+</body>
+</html>

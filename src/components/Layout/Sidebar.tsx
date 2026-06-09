@@ -1,24 +1,22 @@
 'use client';
 
-import { CalendarDays, Activity, NotebookPen, BarChart2, Newspaper, TrendingUp, BarChart, DollarSign, LineChart, Gauge, Zap, ClipboardList, Bell, Bitcoin } from 'lucide-react';
+import { CalendarDays, Activity, NotebookPen, BarChart2, Newspaper, TrendingUp, BarChart, DollarSign, LineChart, Gauge, Zap, ClipboardList, Bell, Bitcoin, CreditCard } from 'lucide-react';
 import { clsx } from 'clsx';
 import ThemeSelector from './ThemeSelector';
 
-export type Section = 'calendar' | 'metrics' | 'news' | 'cot' | 'notes' | 'seasonality' | 'earnings' | 'options' | 'gex' | 'esi' | 'journal' | 'alerts' | 'crypto';
+export type Section = 'calendar' | 'metrics' | 'news' | 'cot' | 'earnings' | 'options' | 'esi' | 'journal' | 'alerts' | 'crypto' | 'subscriptions';
 
 const NAV_ITEMS: { id: Section; icon: React.ElementType; label: string; abbr: string }[] = [
-  { id: 'calendar',    icon: CalendarDays,  label: 'CALENDAR',    abbr: 'CAL'  },
-  { id: 'metrics',     icon: Activity,      label: 'MACRO',       abbr: 'MAC'  },
-  { id: 'news',        icon: Newspaper,     label: 'NEWS FEED',   abbr: 'NEWS' },
-  { id: 'cot',         icon: TrendingUp,    label: 'COT REPORT',  abbr: 'COT'  },
-  { id: 'seasonality', icon: BarChart,      label: 'SEASONALITY', abbr: 'SEA'  },
-  { id: 'earnings',    icon: DollarSign,    label: 'EARNINGS',    abbr: 'ERN'  },
-  { id: 'options',     icon: LineChart,     label: 'OPTIONS',     abbr: 'OPT'  },
-  { id: 'gex',         icon: Gauge,         label: 'GEX',         abbr: 'GEX'  },
-  { id: 'alerts',      icon: Bell,          label: 'ALERTS',      abbr: 'ALT'  },
-  { id: 'journal',     icon: ClipboardList, label: 'JOURNAL',     abbr: 'JRN'  },
-  { id: 'crypto',      icon: Bitcoin,       label: 'CRYPTO',      abbr: 'BTC'  },
-  { id: 'notes',       icon: NotebookPen,   label: 'NOTES',       abbr: 'NTS'  },
+  { id: 'calendar',      icon: CalendarDays,  label: 'CALENDAR',    abbr: 'CAL'  },
+  { id: 'cot',           icon: TrendingUp,    label: 'COT',         abbr: 'COT'  },
+  { id: 'metrics',       icon: Activity,      label: 'MACRO',       abbr: 'MAC'  },
+  { id: 'options',       icon: LineChart,     label: 'OPTIONS',     abbr: 'OPT'  },
+  { id: 'crypto',        icon: Bitcoin,       label: 'CRYPTO',      abbr: 'BTC'  },
+  { id: 'news',          icon: Newspaper,     label: 'NEWS FEED',   abbr: 'NEWS' },
+  { id: 'earnings',      icon: DollarSign,    label: 'EARNINGS',    abbr: 'ERN'  },
+  { id: 'journal',       icon: ClipboardList, label: 'JOURNAL',     abbr: 'JRN'  },
+  { id: 'subscriptions', icon: CreditCard,    label: 'SUBS',        abbr: 'SUB'  },
+  { id: 'alerts',        icon: Bell,          label: 'ALERTS',      abbr: 'ALT'  },
 ];
 
 interface Props {

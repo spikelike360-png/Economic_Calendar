@@ -1,20 +1,18 @@
 'use client';
 
-import { CalendarDays, Activity, Newspaper, TrendingUp, NotebookPen, BarChart, DollarSign, LineChart, Gauge, Zap, ClipboardList } from 'lucide-react';
+import { CalendarDays, Activity, Newspaper, TrendingUp, LineChart, ClipboardList, Bitcoin, Bell } from 'lucide-react';
 import { clsx } from 'clsx';
 import type { Section } from './Sidebar';
 
 const NAV_ITEMS: { id: Section; icon: React.ElementType; label: string }[] = [
-  { id: 'calendar',    icon: CalendarDays, label: 'Calendar' },
-  { id: 'metrics',     icon: Activity,     label: 'Metrics'  },
-  { id: 'news',        icon: Newspaper,    label: 'News'     },
-  { id: 'cot',         icon: TrendingUp,   label: 'COT'      },
-  { id: 'seasonality', icon: BarChart,     label: 'Season'   },
-  { id: 'earnings',    icon: DollarSign,   label: 'Earnings' },
-  { id: 'options',     icon: LineChart,    label: 'Options'  },
-  { id: 'gex',         icon: Gauge,        label: 'GEX'      },
-  { id: 'journal',     icon: ClipboardList, label: 'Journal'  },
-  { id: 'notes',       icon: NotebookPen,  label: 'Notes'    },
+  { id: 'calendar', icon: CalendarDays,  label: 'Calendar' },
+  { id: 'cot',      icon: TrendingUp,    label: 'COT'      },
+  { id: 'metrics',  icon: Activity,      label: 'Macro'    },
+  { id: 'options',  icon: LineChart,     label: 'Options'  },
+  { id: 'crypto',   icon: Bitcoin,       label: 'Crypto'   },
+  { id: 'news',     icon: Newspaper,     label: 'News'     },
+  { id: 'journal',  icon: ClipboardList, label: 'Journal'  },
+  { id: 'alerts',   icon: Bell,          label: 'Alerts'   },
 ];
 
 interface Props {

@@ -6,20 +6,18 @@ import MobileNav from '@/components/Layout/MobileNav';
 import Header from '@/components/Layout/Header';
 import CalendarSection from '@/components/Calendar/CalendarSection';
 import MetricsSection from '@/components/Metrics/MetricsSection';
-import NotesSection from '@/components/Notes/NotesSection';
 import NewsSection from '@/components/News/NewsSection';
-import COTSection from '@/components/COT/COTSection';
-import SeasonalitySection from '@/components/Seasonality/SeasonalitySection';
+import CotSeasonalityWrapper from '@/components/COT/CotSeasonalityWrapper';
 import EarningsSection from '@/components/Earnings/EarningsSection';
-import OptionsSection from '@/components/Options/OptionsSection';
-import GEXBotSection from '@/components/GEXBot/GEXBotSection';
 import ESISection from '@/components/ESI/ESISection';
-import JournalSection from '@/components/Journal/JournalSection';
 import AlertsSection from '@/components/Alerts/AlertsSection';
 import CryptoSection from '@/components/Crypto/CryptoSection';
+import SubscriptionsSection from '@/components/Subscriptions/SubscriptionsSection';
+import OptionGexWrapper from '@/components/Options/OptionGexWrapper';
+import JournalNotesWrapper from '@/components/Journal/JournalNotesWrapper';
 import QuickNoteModal from '@/components/Notes/QuickNoteModal';
 
-const SECTIONS: Section[] = ['calendar', 'metrics', 'news', 'cot', 'seasonality', 'earnings', 'options', 'gex', 'alerts', 'journal', 'crypto', 'notes'];
+const SECTIONS: Section[] = ['calendar', 'cot', 'metrics', 'options', 'crypto', 'news', 'earnings', 'journal', 'subscriptions', 'alerts'];
 const SWIPE_THRESHOLD = 50; // px
 
 export default function Home() {
@@ -64,23 +62,21 @@ export default function Home() {
           {active === 'metrics'  && <MetricsSection />}
           {active === 'esi'      && <ESISection />}
           {active === 'news'     && <NewsSection />}
-          {active === 'cot'          && <COTSection />}
-          {active === 'seasonality'  && <SeasonalitySection />}
+          {active === 'cot'          && <CotSeasonalityWrapper />}
           {active === 'earnings'     && <EarningsSection />}
-          {active === 'options'      && <OptionsSection />}
-          {active === 'gex'          && <GEXBotSection />}
-          {active === 'alerts'       && <AlertsSection />}
-          {active === 'journal'      && <JournalSection />}
-          {active === 'crypto'       && <CryptoSection />}
-          {active === 'notes'        && <NotesSection />}
+          {active === 'options'       && <OptionGexWrapper />}
+          {active === 'alerts'        && <AlertsSection />}
+          {active === 'journal'       && <JournalNotesWrapper />}
+          {active === 'crypto'        && <CryptoSection />}
+          {active === 'subscriptions' && <SubscriptionsSection />}
         </main>
       </div>
 
       {/* Bottom nav — mobile only */}
       <MobileNav active={active} onNavigate={setActive} />
 
-      {/* Quick note popup — hidden on notes page */}
-      {active !== 'notes' && <QuickNoteModal onNavigateNotes={() => setActive('notes')} />}
+      {/* Quick note popup — navigates to journal (which contains notes tab) */}
+      {active !== 'journal' && <QuickNoteModal onNavigateNotes={() => setActive('journal')} />}
     </div>
   );
 }
