@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
+import { sbLoad, sbSave } from '@/lib/supabase';
 
 // ── Types ─────────────────────────────────────────────────────────────────────
 
@@ -240,17 +241,25 @@ export default function SubscriptionsSection() {
   const [filterCat,  setFilterCat]  = useState<string>('All');
   const [sortBy,     setSortBy]     = useState<'name' | 'price' | 'renewal'>('price');
 
-  // Load from localStorage
+  // Load — Supabase first, localStorage fallback
   useEffect(() => {
-    try {
-      const raw = localStorage.getItem(STORAGE_KEY);
-      if (raw) setSubs(JSON.parse(raw));
-    } catch { /* ignore */ }
+    async function load() {
+      try {
+        const remote = await sbLoad<Subscription[]>('subscriptions', 'all');
+        if (remote) { setSubs(remote); localStorage.setItem(STORAGE_KEY, JSON.stringify(remote)); return; }
+      } catch { /* ignore */ }
+      try {
+        const raw = localStorage.getItem(STORAGE_KEY);
+        if (raw) setSubs(JSON.parse(raw));
+      } catch { /* ignore */ }
+    }
+    load();
   }, []);
 
   const save = (updated: Subscription[]) => {
     setSubs(updated);
     localStorage.setItem(STORAGE_KEY, JSON.stringify(updated));
+    sbSave('subscriptions', 'all', updated).catch(() => {});
   };
 
   const handleSave = (sub: Subscription) => {

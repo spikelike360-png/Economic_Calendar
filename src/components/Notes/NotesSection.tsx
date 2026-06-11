@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { Save, Trash2, Plus, FileText, NotebookPen } from 'lucide-react';
 import { clsx } from 'clsx';
+import { sbLoad, sbSave } from '@/lib/supabase';
 
 const STORAGE_KEY = 'macro-dashboard-notes-v1';
 
@@ -30,6 +31,7 @@ function loadNotes(): Note[] {
 
 function saveNotes(notes: Note[]): void {
   localStorage.setItem(STORAGE_KEY, JSON.stringify(notes));
+  sbSave('notes', 'all', notes).catch(() => {});
 }
 
 export default function NotesSection() {
@@ -40,10 +42,23 @@ export default function NotesSection() {
   const [mounted, setMounted] = useState(false);
 
   useEffect(() => {
-    const stored = loadNotes();
-    setNotes(stored);
-    setActiveId(stored[0].id);
-    setMounted(true);
+    async function load() {
+      try {
+        const remote = await sbLoad<Note[]>('notes', 'all');
+        if (remote && remote.length > 0) {
+          localStorage.setItem(STORAGE_KEY, JSON.stringify(remote));
+          setNotes(remote);
+          setActiveId(remote[0].id);
+          setMounted(true);
+          return;
+        }
+      } catch { /* ignore */ }
+      const stored = loadNotes();
+      setNotes(stored);
+      setActiveId(stored[0].id);
+      setMounted(true);
+    }
+    load();
   }, []);
 
   const activeNote = notes.find((n) => n.id === activeId) ?? null;

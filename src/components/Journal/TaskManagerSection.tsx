@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useRef, useState } from 'react';
+import { sbLoad, sbSave } from '@/lib/supabase';
 
 // ── Types ─────────────────────────────────────────────────────────────────────
 
@@ -58,17 +59,25 @@ export default function TaskManagerSection() {
   const [editText,  setEditText]  = useState('');
   const inputRef = useRef<HTMLInputElement>(null);
 
-  // Load
+  // Load — Supabase first, localStorage fallback
   useEffect(() => {
-    try {
-      const raw = localStorage.getItem(STORAGE_KEY);
-      if (raw) setAllTasks(JSON.parse(raw));
-    } catch { /* ignore */ }
+    async function load() {
+      try {
+        const remote = await sbLoad<TasksByDate>('tasks', 'all');
+        if (remote) { setAllTasks(remote); localStorage.setItem(STORAGE_KEY, JSON.stringify(remote)); return; }
+      } catch { /* ignore */ }
+      try {
+        const raw = localStorage.getItem(STORAGE_KEY);
+        if (raw) setAllTasks(JSON.parse(raw));
+      } catch { /* ignore */ }
+    }
+    load();
   }, []);
 
   const persist = (updated: TasksByDate) => {
     setAllTasks(updated);
     localStorage.setItem(STORAGE_KEY, JSON.stringify(updated));
+    sbSave('tasks', 'all', updated).catch(() => {});
   };
 
   const key      = toKey(day);
