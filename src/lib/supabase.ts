@@ -13,7 +13,7 @@ export async function sbSave(table: string, id: string, data: unknown): Promise<
 
 export async function sbLoad<T>(table: string, id: string): Promise<T | null> {
   if (!supabase) return null;
-  const { data, error } = await supabase.from(table).select('data').eq('id', id).single();
+  const { data, error } = await supabase.from(table).select('data').eq('id', id).maybeSingle();
   if (error || !data) return null;
   return data.data as T;
 }
